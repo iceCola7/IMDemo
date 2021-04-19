@@ -67,6 +67,9 @@ class RYManager {
         // 注册自定义的输入区配置
         RongExtensionManager.getInstance().extensionConfig = MyExtensionConfig()
 
+        // 注册自定义表情
+        // RongExtensionManager.getInstance().registerExtensionModule(MyExtensionModule())
+
         // 会话列表的数据过滤
         RongConfigCenter.conversationListConfig().dataProcessor = object : DataProcessor<Conversation> {
             /**
