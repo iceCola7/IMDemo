@@ -4,16 +4,21 @@ import android.content.Context
 import android.view.View
 import com.cxz.imdemo.ui.conversation.ConversationActivity
 import com.cxz.imdemo.ui.conversationlist.ConversationListActivity
+import com.cxz.imdemo.ui.message.CustomConversationProvider
+import com.cxz.imdemo.ui.message.CustomMessageContent
+import com.cxz.imdemo.ui.message.CustomMessageProvider
 import io.rong.imkit.RongIM
 import io.rong.imkit.config.ConversationClickListener
 import io.rong.imkit.config.ConversationListBehaviorListener
 import io.rong.imkit.config.DataProcessor
 import io.rong.imkit.config.RongConfigCenter
 import io.rong.imkit.conversationlist.model.BaseUiConversation
+import io.rong.imkit.conversationlist.provider.PrivateConversationProvider
 import io.rong.imkit.utils.RouteUtils
 import io.rong.imlib.RongIMClient
 import io.rong.imlib.model.Conversation
 import io.rong.imlib.model.Message
+import io.rong.imlib.model.MessageContent
 import io.rong.imlib.model.UserInfo
 import io.rong.push.RongPushClient
 import io.rong.push.pushconfig.PushConfig
@@ -43,9 +48,19 @@ class RYManager {
         )
         RouteUtils.registerActivity(RouteUtils.RongActivityType.ConversationActivity, ConversationActivity::class.java)
 
+        // 连接状态
         RongIM.setConnectionStatusListener {
-
         }
+
+        // 注册自定义会话模板
+        val providerManager = RongConfigCenter.conversationListConfig().providerManager
+        providerManager.replaceProvider(PrivateConversationProvider::class.java, CustomConversationProvider())
+
+        // 注册自定义消息
+        val messageContentList = mutableListOf<Class<out MessageContent>>()
+        messageContentList.add(CustomMessageContent::class.java)
+        RongIMClient.registerMessageType(messageContentList)
+        RongConfigCenter.conversationConfig().addMessageProvider(CustomMessageProvider())
 
         // 会话列表的数据过滤
         RongConfigCenter.conversationListConfig().dataProcessor = object : DataProcessor<Conversation> {
