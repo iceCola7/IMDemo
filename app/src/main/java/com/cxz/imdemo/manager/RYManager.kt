@@ -7,11 +7,13 @@ import com.cxz.imdemo.ui.conversationlist.ConversationListActivity
 import com.cxz.imdemo.ui.message.CustomConversationProvider
 import com.cxz.imdemo.ui.message.CustomMessageContent
 import com.cxz.imdemo.ui.message.CustomMessageProvider
+import com.cxz.imdemo.ui.plugin.MyExtensionConfig
 import io.rong.imkit.RongIM
 import io.rong.imkit.config.ConversationClickListener
 import io.rong.imkit.config.ConversationListBehaviorListener
 import io.rong.imkit.config.DataProcessor
 import io.rong.imkit.config.RongConfigCenter
+import io.rong.imkit.conversation.extension.RongExtensionManager
 import io.rong.imkit.conversationlist.model.BaseUiConversation
 import io.rong.imkit.conversationlist.provider.PrivateConversationProvider
 import io.rong.imkit.utils.RouteUtils
@@ -61,6 +63,9 @@ class RYManager {
         messageContentList.add(CustomMessageContent::class.java)
         RongIMClient.registerMessageType(messageContentList)
         RongConfigCenter.conversationConfig().addMessageProvider(CustomMessageProvider())
+
+        // 注册自定义的输入区配置
+        RongExtensionManager.getInstance().extensionConfig = MyExtensionConfig()
 
         // 会话列表的数据过滤
         RongConfigCenter.conversationListConfig().dataProcessor = object : DataProcessor<Conversation> {
