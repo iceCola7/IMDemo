@@ -34,6 +34,7 @@ class MyExtensionConfig : DefaultExtensionConfig() {
             }
         }
         // 增加扩展项
+        pluginModules.add(MyShotPlugin())
         pluginModules.add(MyImagePlugin())
         return pluginModules
     }
