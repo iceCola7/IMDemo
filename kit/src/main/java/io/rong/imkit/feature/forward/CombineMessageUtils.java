@@ -111,6 +111,7 @@ public class CombineMessageUtils {
     private Boolean isSameDay;
     private Boolean isSameYear;
     private String style = "";
+    private String sendUserId;
 
     private CombineMessageUtils() {
     }
@@ -433,11 +434,13 @@ public class CombineMessageUtils {
         }
 
         Uri uri = info.getPortraitUri();
-        if (uri == null || uri.equals(URI)) {
+        String userId = info.getUserId();
+        if (uri == null || userId == null || uri.equals(URI) && userId.equals(sendUserId)) {
             Log.d(TAG, "getUserPortrait is same uri:" + uri);
             return "";
         }
         URI = uri;
+        sendUserId = userId;
         return getBase64FromUrl(uri);
     }
 

@@ -256,7 +256,6 @@ public class RongExtension extends LinearLayout {
             }
         } else if (inputMode.equals(InputMode.VoiceInput)) {
             mInputPanelContainer.setVisibility(VISIBLE);
-            mAttachedInfoContainer.setVisibility(GONE);
             mBoardContainer.setVisibility(GONE);
             mExtensionViewModel.setSoftInputKeyBoard(false);
             mExtensionViewModel.getExtensionBoardState().setValue(false);

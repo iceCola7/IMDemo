@@ -22,6 +22,7 @@ public class AMapPreviewActivity extends RongBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rc_location_preview_activity);
+        initStatusBar(R.color.app_color_white);
         mTitleBar.setRightIconDrawableVisibility(false);
         mAMapView = findViewById(R.id.rc_ext_amap);
         mAMapView.onCreate(savedInstanceState);

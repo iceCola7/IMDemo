@@ -48,6 +48,7 @@ public class AudioRecordManager implements Handler.Callback {
     private final int AUDIO_RECORD_EVENT_TIME_OUT = 7;
     private final int AUDIO_RECORD_EVENT_TICKER = 8;
     private final int AUDIO_RECORD_EVENT_SEND_FILE = 9;
+    private final int AUDIO_AA_ENCODING_BIT_RATE = 32000;
 
     private int RECORD_INTERVAL = 60;
     private SamplingRate mSampleRate = SamplingRate.RC_SAMPLE_RATE_8000;
@@ -532,10 +533,8 @@ public class AudioRecordManager implements Handler.Callback {
             mMediaRecorder = new MediaRecorder();
             int bpsNb = RongConfigCenter.featureConfig().getAudioNBEncodingBitRate();
             int bpsWb = RongConfigCenter.featureConfig().getAudioWBEncodingBitRate();
-            int bpsAAC = RongConfigCenter.featureConfig().getAudioAACEncodingBitRate();
             if (RongConfigCenter.featureConfig().getVoiceMessageType() == IMCenter.VoiceMessageType.HighQuality) {
-                mMediaRecorder.setAudioSamplingRate(44100);
-                mMediaRecorder.setAudioEncodingBitRate(bpsAAC);
+                mMediaRecorder.setAudioEncodingBitRate(AUDIO_AA_ENCODING_BIT_RATE);
             } else {
                 mMediaRecorder.setAudioSamplingRate(mSampleRate.value);
                 if (mSampleRate.equals(SamplingRate.RC_SAMPLE_RATE_8000)) {

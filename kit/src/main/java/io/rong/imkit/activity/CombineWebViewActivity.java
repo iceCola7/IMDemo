@@ -101,6 +101,7 @@ public class CombineWebViewActivity extends RongBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rc_combine_webview);
+        initStatusBar(R.color.app_color_white);
         initUI();
         initData();
         IMCenter.getInstance().addOnRecallMessageListener(mRecallMessageListener);
@@ -211,12 +212,6 @@ public class CombineWebViewActivity extends RongBaseActivity {
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(CombineWebViewActivity.this);
             builder.setMessage(R.string.rc_notification_error_ssl_cert_invalid);
-            builder.setPositiveButton(R.string.rc_dialog_ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    handler.proceed();
-                }
-            });
             builder.setNegativeButton(R.string.rc_cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

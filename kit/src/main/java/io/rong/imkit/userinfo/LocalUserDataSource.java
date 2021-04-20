@@ -73,7 +73,11 @@ public class LocalUserDataSource {
             ExecutorHelper.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
-                    mDatabase.getUserDao().insertUser(user);
+                    try {
+                        mDatabase.getUserDao().insertUser(user);
+                    } catch (IllegalStateException e) {
+                        RLog.e(TAG, e.getMessage());
+                    }
                 }
             });
         }
@@ -86,7 +90,11 @@ public class LocalUserDataSource {
             ExecutorHelper.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
-                    mDatabase.getGroupMemberDao().insertGroupMember(groupMember);
+                    try {
+                        mDatabase.getGroupMemberDao().insertGroupMember(groupMember);
+                    } catch (IllegalStateException e) {
+                        RLog.e(TAG, e.getMessage());
+                    }
                 }
             });
         }
@@ -98,7 +106,11 @@ public class LocalUserDataSource {
             ExecutorHelper.getInstance().diskIO().execute(new Runnable() {
                 @Override
                 public void run() {
-                    mDatabase.getGroupDao().insertGroup(group);
+                    try {
+                        mDatabase.getGroupDao().insertGroup(group);
+                    } catch (IllegalStateException e) {
+                        RLog.e(TAG, e.getMessage());
+                    }
                 }
             });
         }

@@ -158,7 +158,7 @@
     <string name="rc_location_sevice_dialog_messgae">需要开启位置服务获取位置信息</string>
     <string name="rc_location_sevice_dialog_confirm">去开启</string>
     //webview
-    <string name="rc_notification_error_ssl_cert_invalid">您访问的网页证书无效。是否继续访问?</string>
+    <string name="rc_notification_error_ssl_cert_invalid">您访问的网页证书无效!</string>
     //Dialog
     <string name="rc_dialog_ok">确定</string>
     <string name="rc_confirm">确认</string>
@@ -497,4 +497,6 @@
     <string name="rc_conversation_remote_side_is_typing">对方正在输入&#046;&#046;&#046;</string>
     <string name="rc_conversation_remote_side_speaking">对方正在讲话&#046;&#046;&#046;</string>
     <string name="rc_date_format">MM月dd日 HH:mm</string>
+
+    <string name="rc_mention_messages">有人@我(%s)</string>
 </resources>

@@ -128,6 +128,7 @@ public class DestructManager implements IExtensionEventWatcher {
         if (mExtensionViewModel != null) {
             mExtensionViewModel = null;
         }
+        RongExtensionManager.getInstance().removeExtensionEventWatcher(this);
     }
 
     public void addListener(String pUId, RongIMClient.DestructCountDownTimerListener pDestructListener, String pTag) {

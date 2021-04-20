@@ -1,7 +1,7 @@
 package io.rong.imkit.userinfo;
 
-import io.rong.imkit.userinfo.db.model.Group;
-import io.rong.imkit.userinfo.db.model.GroupMember;
+import io.rong.imkit.userinfo.model.GroupUserInfo;
+import io.rong.imlib.model.Group;
 import io.rong.imlib.model.UserInfo;
 
 public class UserDataProvider {
@@ -32,7 +32,7 @@ public class UserDataProvider {
          * @param userId  用户id。
          * @return GroupUserInfo。
          */
-        GroupMember getGroupUserInfo(String groupId, String userId);
+        GroupUserInfo getGroupUserInfo(String groupId, String userId);
     }
 
 

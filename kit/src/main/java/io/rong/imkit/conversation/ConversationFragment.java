@@ -41,16 +41,17 @@ import io.rong.imkit.MessageItemLongClickAction;
 import io.rong.imkit.MessageItemLongClickActionManager;
 import io.rong.imkit.R;
 import io.rong.imkit.config.RongConfigCenter;
+import io.rong.imkit.conversation.extension.InputMode;
 import io.rong.imkit.conversation.extension.RongExtension;
 import io.rong.imkit.conversation.extension.RongExtensionViewModel;
 import io.rong.imkit.conversation.messgelist.processor.IConversationUIRenderer;
 import io.rong.imkit.conversation.messgelist.viewmodel.MessageItemLongClickBean;
 import io.rong.imkit.conversation.messgelist.viewmodel.MessageViewModel;
-import io.rong.imkit.conversationlist.ConversationListAdapter;
 import io.rong.imkit.event.Event;
 import io.rong.imkit.event.uievent.PageDestroyEvent;
 import io.rong.imkit.event.uievent.PageEvent;
 import io.rong.imkit.event.uievent.ScrollEvent;
+import io.rong.imkit.event.uievent.ScrollMentionEvent;
 import io.rong.imkit.event.uievent.ScrollToEndEvent;
 import io.rong.imkit.event.uievent.ShowLongClickDialogEvent;
 import io.rong.imkit.event.uievent.ShowWarningDialogEvent;
@@ -85,6 +86,7 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
     protected RongExtension mRongExtension;
     protected TextView mNewMessageNum;
     protected TextView mUnreadHistoryMessageNum;
+    protected TextView mUnreadMentionMessageNum;
     // 开启合并转发的选择会话界面
     public static final int REQUEST_CODE_FORWARD = 104;
     private LinearLayout mNotificationContainer;
@@ -103,15 +105,17 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.rc_conversation_fragment, null, false);
+        View rootView = inflater.inflate(R.layout.rc_conversation_fragment, container, false);
         mList = rootView.findViewById(R.id.rc_message_list);
         mRongExtension = rootView.findViewById(R.id.rc_extension);
         mRefreshLayout = rootView.findViewById(R.id.rc_refresh);
         mNewMessageNum = rootView.findViewById(R.id.rc_new_message_number);
         mUnreadHistoryMessageNum = rootView.findViewById(R.id.rc_unread_message_count);
+        mUnreadMentionMessageNum = rootView.findViewById(R.id.rc_mention_message_count);
         mNotificationContainer = rootView.findViewById(R.id.rc_notification_container);
         mNewMessageNum.setOnClickListener(this);
         mUnreadHistoryMessageNum.setOnClickListener(this);
+        mUnreadMentionMessageNum.setOnClickListener(this);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mLinearLayoutManager.setStackFromEnd(true);
         mList.setLayoutManager(mLinearLayoutManager);
@@ -272,6 +276,7 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
         mList.removeOnScrollListener(mScrollListener);
         mMessageViewModel.getPageEventLiveData().removeObserver(mPageObserver);
         mMessageViewModel.getUiMessageLiveData().removeObserver(mListObserver);
+        mMessageViewModel.getNewMentionMessageUnreadLiveData().removeObserver(mNewMentionMessageUnreadObserver);
         if (mMessageViewModel != null) {
             mMessageViewModel.onDestroy();
         }
@@ -287,6 +292,7 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
         mMessageViewModel.getUiMessageLiveData().observeForever(mListObserver);
         mMessageViewModel.getNewMessageUnreadLiveData().observe(getViewLifecycleOwner(), mNewMessageUnreadObserver);
         mMessageViewModel.getHistoryMessageUnreadLiveData().observe(getViewLifecycleOwner(), mHistoryMessageUnreadObserver);
+        mMessageViewModel.getNewMentionMessageUnreadLiveData().observe(getViewLifecycleOwner(), mNewMentionMessageUnreadObserver);
         mRongExtensionViewModel.getExtensionBoardState().observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(final Boolean value) {
@@ -294,7 +300,10 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
                 mList.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        mList.scrollToPosition(mAdapter.getItemCount() - 1);
+                        InputMode inputMode = mRongExtensionViewModel.getInputModeLiveData().getValue();
+                        if (!inputMode.equals(InputMode.MoreInputMode) && true == value) {
+                            mList.scrollToPosition(mAdapter.getItemCount() - 1);
+                        }
                     }
                 }, 150);
             }
@@ -373,6 +382,7 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
             }
         }
     };
+
     Observer<Integer> mHistoryMessageUnreadObserver = new Observer<Integer>() {
         @Override
         public void onChanged(Integer count) {
@@ -382,6 +392,20 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
                     mUnreadHistoryMessageNum.setText(MessageFormat.format(getString(R.string.rc_unread_message), count > 99 ? "99+" : count));
                 } else {
                     mUnreadHistoryMessageNum.setVisibility(View.GONE);
+                }
+            }
+        }
+    };
+
+    Observer<Integer> mNewMentionMessageUnreadObserver = new Observer<Integer>() {
+        @Override
+        public void onChanged(Integer count) {
+            if (RongConfigCenter.conversationConfig().isShowNewMentionMessageBar(mMessageViewModel.getCurConversationType())) {
+                if (count != null && count > 0) {
+                    mUnreadMentionMessageNum.setVisibility(View.VISIBLE);
+                    mUnreadMentionMessageNum.setText(getContext().getResources().getString(R.string.rc_mention_messages, count));
+                } else {
+                    mUnreadMentionMessageNum.setVisibility(View.GONE);
                 }
             }
         }
@@ -409,6 +433,8 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
                 }
             } else if (event instanceof ScrollToEndEvent) {
                 mList.scrollToPosition(mAdapter.getItemCount() - 1);
+            } else if (event instanceof ScrollMentionEvent) {
+                mMessageViewModel.onScrolled(mList, 0, 0);
             } else if (event instanceof ScrollEvent) {
                 mList.scrollToPosition(mAdapter.getHeadersCount() + ((ScrollEvent) event).getPosition());
             } else if (event instanceof SmoothScrollEvent) {
@@ -553,6 +579,8 @@ public class ConversationFragment extends Fragment implements OnRefreshListener,
             mMessageViewModel.newMessageBarClick();
         } else if (id == R.id.rc_unread_message_count) {
             mMessageViewModel.unreadBarClick();
+        } else if (id == R.id.rc_mention_message_count) {
+            mMessageViewModel.newMentionMessageBarClick();
         }
     }
 

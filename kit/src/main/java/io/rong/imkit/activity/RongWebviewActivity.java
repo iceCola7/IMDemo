@@ -39,6 +39,7 @@ public class RongWebviewActivity extends RongBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rc_ac_webview);
+        initStatusBar(R.color.app_color_white);
         Intent intent = getIntent();
         mWebView = findViewById(R.id.rc_webview);
         mProgressBar = findViewById(R.id.rc_web_progressbar);
@@ -125,12 +126,6 @@ public class RongWebviewActivity extends RongBaseActivity {
         public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(RongWebviewActivity.this);
             builder.setMessage(R.string.rc_notification_error_ssl_cert_invalid);
-            builder.setPositiveButton(R.string.rc_dialog_ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    handler.proceed();
-                }
-            });
             builder.setNegativeButton(R.string.rc_cancel, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

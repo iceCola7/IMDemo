@@ -19,16 +19,21 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Observer;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.rong.common.RLog;
 import io.rong.imkit.IMCenter;
 import io.rong.imkit.R;
 import io.rong.imkit.config.RongConfigCenter;
 import io.rong.imkit.conversation.RongConversationActivity;
+import io.rong.imkit.model.ConversationKey;
 import io.rong.imkit.userinfo.RongUserInfoManager;
+import io.rong.imkit.userinfo.db.model.User;
 import io.rong.imkit.utils.RouteUtils;
 import io.rong.imkit.utils.StringUtils;
 import io.rong.imkit.widget.cache.RongCache;
@@ -60,6 +65,7 @@ public class RongNotificationManager {
     private Activity mTopForegroundActivity;
     private static boolean mIsInForeground;
     private HashMap<Integer, Integer> notificationCache;
+    private ConcurrentHashMap<String, Message> messageMap = new ConcurrentHashMap<>();
 
     private RongNotificationManager() {
 
@@ -74,6 +80,7 @@ public class RongNotificationManager {
     }
 
     public void init(Application application) {
+        messageMap.clear();
         mApplication = application;
         notificationCache = new HashMap<>();
         IMCenter.getInstance().addConversationStatusListener(new RongIMClient.ConversationStatusListener() {
@@ -91,8 +98,8 @@ public class RongNotificationManager {
         IMCenter.getInstance().addOnReceiveMessageListener(new RongIMClient.OnReceiveMessageWrapperListener() {
             @Override
             public boolean onReceived(final Message message, int left, boolean hasPackage, boolean offline) {
-                RLog.d(TAG,"onReceived. uid:" + message.getUId() + "; offline:" + offline);
-                if (!isReceivedFiltered(message, left, hasPackage, offline)) {
+                RLog.d(TAG, "onReceived. uid:" + message.getUId() + "; offline:" + offline);
+                if (shouldNotify(message, left, hasPackage, offline)) {
                     //高优先级消息不受免打扰和会话通知状态控制
                     if (isHighPriorityMessage(message)) {
                         preToNotify(message);
@@ -137,6 +144,29 @@ public class RongNotificationManager {
             }
         });
         registerActivityLifecycleCallback();
+
+        RongUserInfoManager.getInstance().getAllUsersLiveData().observeForever(new Observer<List<User>>() {
+            @Override
+            public void onChanged(List<User> users) {
+                Conversation.ConversationType[] types = new Conversation.ConversationType[]{
+                        Conversation.ConversationType.PRIVATE, Conversation.ConversationType.GROUP,
+                        Conversation.ConversationType.DISCUSSION, Conversation.ConversationType.CUSTOMER_SERVICE,
+                        Conversation.ConversationType.CHATROOM, Conversation.ConversationType.SYSTEM
+                };
+                Message message;
+
+                for (User user : users) {
+                    for (Conversation.ConversationType type : types) {
+                        String key = ConversationKey.obtain(user.id, type).getKey();
+                        if (messageMap.containsKey(key)) {
+                            message = messageMap.get(key);
+                            messageMap.remove(key);
+                            prepareToSendNotification(message);
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void preToNotify(Message message) {
@@ -169,6 +199,10 @@ public class RongNotificationManager {
         Conversation.ConversationType type = message.getConversationType();
         String targetId = message.getTargetId();
 
+        ConversationKey targetKey = ConversationKey.obtain(message.getTargetId(), message.getConversationType());
+        if (targetKey == null) {
+            RLog.e(TAG, "onReceiveMessageFromApp targetKey is null");
+        }
         if (type.equals(Conversation.ConversationType.GROUP)) {
             Group group = RongUserInfoManager.getInstance().getGroupInfo(targetId);
             title = group == null ? targetId : group.getName();
@@ -177,12 +211,22 @@ public class RongNotificationManager {
                 content = senderInfo == null ? message.getSenderUserId() : senderInfo.getName()
                         + IMCenter.getInstance().getContext().getString(R.string.rc_recalled_message);
             } else {
+                if (senderInfo == null) {
+                    if (targetKey != null) {
+                        messageMap.put(targetKey.getKey(), message);
+                    }
+                }
                 content = senderInfo == null ? message.getSenderUserId() : senderInfo.getName()
                         + ":" + RongConfigCenter.conversationConfig().getMessageSummary(mApplication.getApplicationContext(), message.getContent());
             }
         } else {
             UserInfo userInfo = RongUserInfoManager.getInstance().getUserInfo(targetId);
             title = userInfo == null ? targetId : userInfo.getName();
+            if (userInfo == null) {
+                if (targetKey != null) {
+                    messageMap.put(targetKey.getKey(), message);
+                }
+            }
             if (message.getContent() instanceof RecallNotificationMessage) {
                 content = IMCenter.getInstance().getContext().getString(R.string.rc_recalled_message);
             } else {
@@ -192,14 +236,16 @@ public class RongNotificationManager {
         if (RongConfigCenter.notificationConfig().getTitleType().equals(NotificationConfig.TitleType.APP_NAME)) {
             title = mApplication.getPackageManager().getApplicationLabel(mApplication.getApplicationInfo()).toString();
         }
-        PendingIntent pendingIntent = RongConfigCenter.notificationConfig().getPendingIntent();
-        if (pendingIntent == null) {
-            Class<? extends Activity> destination = RouteUtils.getActivity(RouteUtils.RongActivityType.ConversationActivity);
-            Intent intent = new Intent(mApplication, destination == null ? RongConversationActivity.class : destination);
-            intent.putExtra(RouteUtils.CONVERSATION_TYPE, type.getName().toLowerCase());
-            intent.putExtra(RouteUtils.TARGET_ID, targetId);
-            int requestCode = 200;
-            pendingIntent = PendingIntent.getActivity(mApplication, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Class<? extends Activity> destination = RouteUtils.getActivity(RouteUtils.RongActivityType.ConversationActivity);
+        Intent intent = new Intent(mApplication, destination == null ? RongConversationActivity.class : destination);
+        intent.putExtra(RouteUtils.CONVERSATION_TYPE, type.getName().toLowerCase());
+        intent.putExtra(RouteUtils.TARGET_ID, targetId);
+        intent.putExtra(RouteUtils.MESSAGE, message);
+        int requestCode = 200;
+        PendingIntent pendingIntent = PendingIntent.getActivity(mApplication, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (RongConfigCenter.notificationConfig().getInterceptor() != null) {
+            pendingIntent = RongConfigCenter.notificationConfig().getInterceptor().onPendingIntent(pendingIntent, intent);
         }
 
         MessagePushConfig messagePushConfig = message.getMessagePushConfig();
@@ -233,30 +279,48 @@ public class RongNotificationManager {
         mNotificationId++;
     }
 
-    private boolean isReceivedFiltered(Message message, int left, boolean hasPackage, boolean offline) {
-        //聊天室或处于会话页面时，没有本地通知
-        if (message.getConversationType().equals(Conversation.ConversationType.CHATROOM)
-                || isInConversationPage()) {
-            return true;
-        }
+    /**
+     * 是否需要弹出本地通知。
+     * SDK 默认不弹出本地通知的场景：
+     * 1. 聊天室消息没有本地通知。
+     * 2. 离线消息和不计数消息没有本地通知
+     * 3. 接受消息时处于免打扰状态，不弹通知。
+     *
+     * @return true 需要本地通知；false 不弹本地通知
+     */
+    private boolean shouldNotify(Message message, int left, boolean hasPackage, boolean offline) {
         MessageConfig messageConfig = message.getMessageConfig();
         if (messageConfig != null && messageConfig.isDisableNotification()) {
-            return true;
+            return false;
         }
         // 离线消息和不计数消息，没有本地通知
         final MessageTag msgTag = message.getContent().getClass().getAnnotation(MessageTag.class);
         if (offline || msgTag != null && (msgTag.flag() & MessageTag.ISCOUNTED) != MessageTag.ISCOUNTED) {
-            return true;
+            return false;
         }
+
+        //通知被拦截，则 SDK 不再处理。
+        if (RongConfigCenter.notificationConfig().getInterceptor() != null
+                && RongConfigCenter.notificationConfig().getInterceptor().isNotificationIntercepted(message)) {
+            return false;
+        }
+        //聊天室或处于会话页面时，没有本地通知
+        if (message.getConversationType().equals(Conversation.ConversationType.CHATROOM)
+                || isInConversationPage()) {
+            return false;
+        }
+
         //高优先级消息，必弹通知
         if (isHighPriorityMessage(message)) {
-            return false;
+            return true;
         }
 
         if (!isQuietSettingSynced) {  //全局免打扰设置没有同步成功时，默认不弹通知。
             getNotificationQuietHours(null);
-            return true;
-        } else return isInQuietTime();
+            return false;
+        } else {
+            return !isInQuietTime();
+        }
     }
 
     private boolean isRecallFiltered(Message message) {
@@ -282,7 +346,7 @@ public class RongNotificationManager {
     }
 
     private boolean isHighPriorityMessage(Message message) {
-        NotificationConfig.interceptor interceptor = RongConfigCenter.notificationConfig().getListener();
+        NotificationConfig.Interceptor interceptor = RongConfigCenter.notificationConfig().getInterceptor();
         if (interceptor != null) {
             return interceptor.isHighPriorityMessage(message);
         } else if (message.getContent().getMentionedInfo() != null) {
@@ -351,8 +415,26 @@ public class RongNotificationManager {
         }
     }
 
-    public void removeNotificationQuietHours(RongIMClient.OperationCallback callback) {
-        setNotificationQuietHours(null, 0, null);
+    public void removeNotificationQuietHours(final RongIMClient.OperationCallback callback) {
+        RongIMClient.getInstance().removeNotificationQuietHours(new RongIMClient.OperationCallback() {
+            @Override
+            public void onSuccess() {
+
+                mQuietStartTime = null;
+                mQuietSpanTime = 0;
+
+                if (callback != null){
+                    callback.onSuccess();
+                }
+            }
+
+            @Override
+            public void onError(RongIMClient.ErrorCode errorCode) {
+                if (callback != null){
+                    callback.onError(errorCode);
+                }
+            }
+        });
     }
 
     private void getConversationNotificationStatus(Conversation.ConversationType type, String targetId, final RongIMClient.ResultCallback<Conversation.ConversationNotificationStatus> callback) {
@@ -383,8 +465,8 @@ public class RongNotificationManager {
 
     private void sound() {
         Uri res = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RongConfigCenter.notificationConfig().getListener() != null) {
-            NotificationChannel channel = RongConfigCenter.notificationConfig().getListener().onRegisterChannel(NotificationUtil.getInstance().getDefaultChannel(mApplication));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RongConfigCenter.notificationConfig().getInterceptor() != null) {
+            NotificationChannel channel = RongConfigCenter.notificationConfig().getInterceptor().onRegisterChannel(NotificationUtil.getInstance().getDefaultChannel(mApplication));
             res = channel.getSound();
         }
         try {

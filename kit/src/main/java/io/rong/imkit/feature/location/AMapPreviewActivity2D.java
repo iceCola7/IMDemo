@@ -22,6 +22,7 @@ public class AMapPreviewActivity2D extends RongBaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rc_location_preview_activity_2d);
+        initStatusBar(R.color.app_color_white);
         mAMapView = findViewById(R.id.rc_ext_amap);
         mAMapView.onCreate(savedInstanceState);
         mTitleBar.setTitle(R.string.rc_location_title);

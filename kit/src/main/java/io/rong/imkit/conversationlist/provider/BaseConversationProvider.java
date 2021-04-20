@@ -37,8 +37,10 @@ public class BaseConversationProvider implements IViewProvider<BaseUiConversatio
     }
 
     @Override
-    public void bindViewHolder(final ViewHolder holder, BaseUiConversation uiConversation, int position, List<BaseUiConversation> list, IViewProviderListener<BaseUiConversation> listener) {
+    public void bindViewHolder(final ViewHolder holder, final BaseUiConversation uiConversation, int position, List<BaseUiConversation> list, IViewProviderListener<BaseUiConversation> listener) {
         holder.setText(R.id.rc_conversation_title, uiConversation.mCore.getConversationTitle());
+
+        //会话头像
         if (!TextUtils.isEmpty(uiConversation.mCore.getPortraitUrl())) {
             RongConfigCenter.featureConfig().getKitImageEngine().loadConversationListPortrait(holder.getContext(), uiConversation.mCore.getPortraitUrl(), holder.<ImageView>getView(R.id.rc_conversation_portrait));
         } else {
@@ -52,6 +54,25 @@ public class BaseConversationProvider implements IViewProvider<BaseUiConversatio
             }
             holder.setImageBitmapCircle(R.id.rc_conversation_portrait, drawableId);
         }
+        holder.getView(R.id.rc_conversation_portrait).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (RongConfigCenter.conversationListConfig().getListener() != null) {
+                    RongConfigCenter.conversationListConfig().getListener().onConversationPortraitClick(holder.getContext(), uiConversation.mCore.getConversationType(),
+                            uiConversation.mCore.getTargetId());
+                }
+            }
+        });
+        holder.getView(R.id.rc_conversation_portrait).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if (RongConfigCenter.conversationListConfig().getListener() != null) {
+                    return RongConfigCenter.conversationListConfig().getListener().onConversationPortraitLongClick(holder.getContext(), uiConversation.mCore.getConversationType(),
+                            uiConversation.mCore.getTargetId());
+                }
+                return false;
+            }
+        });
         //会话内容
         ((TextView) holder.getView(R.id.rc_conversation_content)).setCompoundDrawables(null, null, null, null);
         if (uiConversation.mCore.getSentStatus() != null

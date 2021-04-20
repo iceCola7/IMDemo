@@ -478,7 +478,7 @@ public class ConversationListViewModel extends AndroidViewModel {
             Conversation.ConversationType type = event.getMessage().getConversationType();
             String targetId = event.getMessage().getTargetId();
             BaseUiConversation oldItem = findConversationFromList(type, targetId, mDataFilter.isGathered(type));
-            if (oldItem != null && oldItem.mCore.getLatestMessageId() == event.getMessage().getMessageId()) {
+            if (oldItem != null && oldItem.mCore.getLatestMessageId() == event.getMessage().getMessageId() && event.getEvent() != DownloadEvent.PROGRESS) {
                 getConversation(type, targetId);
             }
         }
@@ -544,12 +544,12 @@ public class ConversationListViewModel extends AndroidViewModel {
         }
 
         @Override
-        public void onMessageReceiptRequest(Conversation.ConversationType conversationType, String s, String s1) {
+        public void onMessageReceiptRequest(Conversation.ConversationType type, String targetId, String messageUId) {
 
         }
 
         @Override
-        public void onMessageReceiptResponse(Conversation.ConversationType conversationType, String s, String s1, HashMap<String, Long> hashMap) {
+        public void onMessageReceiptResponse(Conversation.ConversationType type, String targetId, String messageUId, HashMap<String, Long> respondUserIdList) {
 
         }
     };

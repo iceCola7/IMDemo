@@ -123,6 +123,7 @@ public class AMapLocationActivity extends RongBaseActivity implements
             return;
         }
         setContentView(R.layout.rc_plugin_location_activity);
+        initStatusBar(R.color.app_color_white);
         mAMapView = findViewById(R.id.rc_ext_amap);
         initNearbyView();
         mHandler = new Handler();

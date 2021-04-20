@@ -1205,14 +1205,14 @@ public class RongIM {
      * 如果需要异步从服务器获取用户信息，使用者可以在此方法中发起异步请求，然后返回 null 信息。
      * 在异步请求结果返回后，根据返回的结果调用 {@link #refreshGroupUserInfoCache(GroupUserInfo)} 刷新信息。</p>
      *
-     * @param userInfoProvider 群组用户信息提供者。
-     * @param isCacheUserInfo  设置是否由 IMKit 来缓存 GroupUserInfo。<br>
+     * @param groupUserInfoProvider 群组用户信息提供者。
+     * @param isCacheGroupUserInfo  设置是否由 IMKit 来缓存 GroupUserInfo。<br>
      *                         如果 App 提供的 GroupUserInfoProvider。
      *                         每次都需要通过网络请求数据，而不是将数据缓存到本地，会影响信息的加载速度；<br>
      *                         此时最好将本参数设置为 true，由 IMKit 来缓存信息。
      */
-    public static void setGroupUserInfoProvider(UserDataProvider.GroupUserInfoProvider userInfoProvider, boolean isCacheUserInfo) {
-        RongUserInfoManager.getInstance().setGroupUserInfoProvider(userInfoProvider, isCacheUserInfo);
+    public static void setGroupUserInfoProvider(UserDataProvider.GroupUserInfoProvider groupUserInfoProvider, boolean isCacheGroupUserInfo) {
+        RongUserInfoManager.getInstance().setGroupUserInfoProvider(groupUserInfoProvider, isCacheGroupUserInfo);
     }
 
     /**
@@ -1436,6 +1436,10 @@ public class RongIM {
      */
     public void startSubConversationList(Context context, Conversation.ConversationType conversationType) {
         RouteUtils.routeToSubConversationListActivity(context, conversationType, "");
+    }
+
+    public static String getVersion() {
+        return IMKitBuildVar.SDK_VERSION;
     }
 
 }

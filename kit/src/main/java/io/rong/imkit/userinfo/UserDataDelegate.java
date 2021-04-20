@@ -3,9 +3,10 @@ package io.rong.imkit.userinfo;
 
 import io.rong.imkit.userinfo.db.model.Group;
 import io.rong.imkit.userinfo.db.model.GroupMember;
+import io.rong.imkit.userinfo.model.GroupUserInfo;
 import io.rong.imlib.model.UserInfo;
 
-public class UserDataDelegate implements UserDataProvider.UserInfoProvider, UserDataProvider.GroupInfoProvider, UserDataProvider.GroupUserInfoProvider {
+public class UserDataDelegate {
     private UserDataProvider.UserInfoProvider mUserInfoProvider;
     private UserDataProvider.GroupInfoProvider mGroupInfoProvider;
     private UserDataProvider.GroupUserInfoProvider mGroupUserInfoProvider;
@@ -25,7 +26,6 @@ public class UserDataDelegate implements UserDataProvider.UserInfoProvider, User
         mGroupUserInfoProvider = provider;
     }
 
-    @Override
     public UserInfo getUserInfo(String userId) {
         if (mUserInfoProvider != null) {
             return mUserInfoProvider.getUserInfo(userId);
@@ -33,18 +33,22 @@ public class UserDataDelegate implements UserDataProvider.UserInfoProvider, User
         return null;
     }
 
-    @Override
     public GroupMember getGroupUserInfo(String groupId, String userId) {
         if (mGroupUserInfoProvider != null) {
-            return mGroupUserInfoProvider.getGroupUserInfo(groupId, userId);
+            GroupUserInfo groupUserInfo = mGroupUserInfoProvider.getGroupUserInfo(groupId, userId);
+            if (groupUserInfo != null) {
+                return new GroupMember(groupUserInfo.getGroupId(), groupUserInfo.getUserId(), groupUserInfo.getNickname());
+            }
         }
         return null;
     }
 
-    @Override
     public Group getGroupInfo(String groupId) {
         if (mGroupInfoProvider != null) {
-            return mGroupInfoProvider.getGroupInfo(groupId);
+            io.rong.imlib.model.Group group = mGroupInfoProvider.getGroupInfo(groupId);
+            if (group != null) {
+                return new Group(group.getId(), group.getName(), group.getPortraitUri().toString());
+            }
         }
         return null;
     }

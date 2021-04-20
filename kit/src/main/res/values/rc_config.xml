@@ -76,6 +76,14 @@
 
     <!--在前台非会话页面时，接收到新消息是否响铃 -->
     <bool name="rc_sound_in_foreground">true</bool>
-    
 
+    <!--会话页面右上角的未读 @ 消息数提示，当收到的消息中有 @ 消息时，进入会话之后，是否在右上角提示未读 @ 消息数-->
+    <bool name="rc_enable_unread_mention">true</bool>
+
+    <!-- 进入会话界面，默认拉取历史消息数量 -->
+    <integer name="rc_conversation_history_message_count">10</integer>
+    <!-- 进入会话界面，默认拉取远端历史消息数量 -->
+    <integer name="rc_conversation_remote_message_count">10</integer>
+    <!-- 进入会话界面，默认显示未读消息数量 -->
+    <integer name="rc_conversation_show_unread_message_count">10</integer>
 </resources>

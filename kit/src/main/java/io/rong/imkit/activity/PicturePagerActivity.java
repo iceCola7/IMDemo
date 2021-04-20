@@ -372,6 +372,7 @@ public class PicturePagerActivity extends RongBaseNoActionbarActivity implements
             Glide.with(PicturePagerActivity.this).asBitmap().load(originalUri).timeout(30000).into(new CustomTarget<Bitmap>() {
                 @Override
                 public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                    resource = resource.copy(Bitmap.Config.ARGB_8888, true);
                     int maxLoader = Utils.getMaxLoader();//openGL最大允许的长或宽
                     if (resource != null && resource.getWidth() < maxLoader && resource.getHeight() < maxLoader) {
                         if (mCurrentImageMessage.isDestruct() && mMessage.getMessageDirection().equals(Message.MessageDirection.RECEIVE)) {
@@ -389,6 +390,7 @@ public class PicturePagerActivity extends RongBaseNoActionbarActivity implements
                         Glide.with(PicturePagerActivity.this).asFile().load(originalUri).timeout(30000).into(new CustomTarget<File>() {
                             @Override
                             public void onResourceReady(@NonNull File resource, @Nullable Transition<? super File> transition) {
+
                                 if (mCurrentImageMessage.isDestruct() && mMessage.getMessageDirection().equals(Message.MessageDirection.RECEIVE)) {
                                     DestructManager.getInstance().startDestruct(mMessage);
                                     //todo
@@ -428,7 +430,7 @@ public class PicturePagerActivity extends RongBaseNoActionbarActivity implements
                         thumbPath = thumbUri.toString().substring(7);
                     }
                     if (thumbPath != null) {
-                        thumbBitmap = BitmapFactory.decodeFile(thumbPath);
+                        thumbBitmap = BitmapFactory.decodeFile(thumbPath).copy(Bitmap.Config.ARGB_8888, true);
                     }
                     /*
                      * 为保持与加载后放大缩小手势可缩放比率一致

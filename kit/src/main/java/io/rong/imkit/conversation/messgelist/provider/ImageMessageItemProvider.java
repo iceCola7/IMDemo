@@ -2,6 +2,7 @@ package io.rong.imkit.conversation.messgelist.provider;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.text.Spannable;
@@ -42,10 +43,22 @@ public class ImageMessageItemProvider extends BaseMessageItemProvider<ImageMessa
     private static final String TAG = "ImageMessageItemProvide";
     private Integer minSize = null;
     private Integer maxSize = null;
+    private static int THUMB_COMPRESSED_SIZE = 240;
+    private static int THUMB_COMPRESSED_MIN_SIZE = 100;
 
     public ImageMessageItemProvider() {
         mConfig.showContentBubble = false;
         mConfig.showProgress = false;
+        Context context = IMCenter.getInstance().getContext();
+        if (context != null) {
+            Resources resources = context.getResources();
+            try {
+                THUMB_COMPRESSED_SIZE = resources.getInteger(resources.getIdentifier("rc_thumb_compress_size", "integer", context.getPackageName()));
+                THUMB_COMPRESSED_MIN_SIZE = resources.getInteger(resources.getIdentifier("rc_thumb_compress_min_size", "integer", context.getPackageName()));
+            } catch (Resources.NotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -109,10 +122,10 @@ public class ImageMessageItemProvider extends BaseMessageItemProvider<ImageMessa
         int width = drawable.getIntrinsicWidth();
         int height = drawable.getIntrinsicHeight();
         if (minSize == null) {
-            minSize = ScreenUtils.dip2px(view.getContext(), 50);
+            minSize = THUMB_COMPRESSED_MIN_SIZE;
         }
         if (maxSize == null) {
-            maxSize = ScreenUtils.dip2px(view.getContext(), 120);
+            maxSize = THUMB_COMPRESSED_SIZE;
         }
         int finalWidth;
         int finalHeight;
@@ -125,16 +138,11 @@ public class ImageMessageItemProvider extends BaseMessageItemProvider<ImageMessa
                 finalWidth = Math.min((int) (minSize * 1f / height * width), maxSize);
             }
         } else if (width < maxSize && height < maxSize) {
-            if (width > height) {
-                finalWidth = maxSize;
-                finalHeight = (int) (maxSize * 1f / width * height);
-            } else {
-                finalHeight = maxSize;
-                finalWidth = (int) (maxSize * 1f / height * width);
-            }
+            finalWidth = width;
+            finalHeight = height;
         } else {
             if (width > height) {
-                if (width * 1f / height <= 2.4) {
+                if (width * 1f / height <= maxSize * 1.0f / minSize) {
                     finalWidth = maxSize;
                     finalHeight = (int) (maxSize * 1f / width * height);
                 } else {
@@ -142,7 +150,7 @@ public class ImageMessageItemProvider extends BaseMessageItemProvider<ImageMessa
                     finalHeight = minSize;
                 }
             } else {
-                if (height * 1f / width <= 2.4) {
+                if (height * 1f / width <= maxSize * 1.0f / minSize) {
                     finalHeight = maxSize;
                     finalWidth = (int) (maxSize * 1f / height * width);
                 } else {
@@ -152,8 +160,8 @@ public class ImageMessageItemProvider extends BaseMessageItemProvider<ImageMessa
             }
         }
         ViewGroup.LayoutParams params = view.getLayoutParams();
-        params.height = finalHeight;
-        params.width = finalWidth;
+        params.height = ScreenUtils.dip2px(view.getContext(), finalHeight / 2);
+        params.width = ScreenUtils.dip2px(view.getContext(), finalWidth / 2);
         view.setLayoutParams(params);
     }
 

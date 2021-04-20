@@ -39,7 +39,7 @@ public abstract class UserDatabase extends RoomDatabase {
      * @param userId  用户 id，用于打开不同用户数据库时区分使用。
      * @return
      */
-    public static UserDatabase openDb(Context context, String userId) {
+    static UserDatabase openDb(Context context, String userId) {
         synchronized (UserDatabase.class) {
             if (TextUtils.isEmpty(userId) || context == null) {
                 RLog.e(TAG, "openDb - context or userId can't be empty.");
@@ -60,7 +60,7 @@ public abstract class UserDatabase extends RoomDatabase {
         }
     }
 
-    public static MutableLiveData<Boolean> getDatabaseCreated() {
+    static MutableLiveData<Boolean> getDatabaseCreated() {
         return mDatabaseCreated;
     }
 

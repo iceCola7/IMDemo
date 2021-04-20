@@ -134,6 +134,19 @@ public class ConversationConfig {
     private IMessageProvider defaultMessageProvider = new DefaultMessageItemProvider();
     private IMessageViewModelProcessor mViewModelProcessor;
 
+    // 是否显示未读 @消息
+    private boolean showNewMentionMessageBar = true;
+    // 进入会话界面，默认拉取历史消息数量
+    private int conversationHistoryMessageCount = 10;
+    private static final int conversationHistoryMessageMaxCount = 100;
+    // 进入会话界面，默认拉取远端历史消息数量
+    private int conversationRemoteMessageCount = 10;
+    private static int conversationRemoteMessageMaxCount = 100;
+    // 进入会话界面，默认显示未读消息数量
+    private int conversationShowUnreadMessageCount = 10;
+    private static int conversationShowUnreadMessageMaxCount = 100;
+
+
     ConversationConfig() {
         initMessageProvider();
         initViewProcessor();
@@ -217,8 +230,40 @@ public class ConversationConfig {
             } catch (Exception e) {
                 RLog.e(TAG, "rc_enable_send_combine_message not get value", e);
             }
-        }
 
+            try {
+                showNewMentionMessageBar = resources.getBoolean(R.bool.rc_enable_unread_mention);
+            } catch (Exception e) {
+                RLog.e(TAG, "rc_enable_unread_mention not get value", e);
+            }
+
+            try {
+                conversationHistoryMessageCount = resources.getInteger(R.integer.rc_conversation_history_message_count);
+                if(conversationHistoryMessageCount > conversationHistoryMessageMaxCount) {
+                    conversationHistoryMessageCount = conversationHistoryMessageMaxCount;
+                }
+            } catch (Exception e) {
+                RLog.e(TAG, "rc_conversation_history_message_count not get value", e);
+            }
+
+            try {
+                conversationRemoteMessageCount = resources.getInteger(R.integer.rc_conversation_remote_message_count);
+                if(conversationRemoteMessageCount > conversationRemoteMessageMaxCount) {
+                    conversationRemoteMessageCount = conversationRemoteMessageMaxCount;
+                }
+            } catch (Exception e) {
+                RLog.e(TAG, "rc_conversation_remote_message_count not get value", e);
+            }
+
+            try {
+                conversationShowUnreadMessageCount = resources.getInteger(R.integer.rc_conversation_show_unread_message_count);
+                if(conversationShowUnreadMessageCount > conversationShowUnreadMessageMaxCount) {
+                    conversationShowUnreadMessageCount = conversationShowUnreadMessageMaxCount;
+                }
+            } catch (Exception e) {
+                RLog.e(TAG, "rc_conversation_show_unread_message_count not get value", e);
+            }
+        }
     }
 
     private void initMessageProvider() {
@@ -443,6 +488,54 @@ public class ConversationConfig {
             }
         }
         return false;
+    }
+
+    /**
+     * 会话页面右上角的未读 @ 消息数提示，目前仅支持群聊
+     *
+     * @param type 会话类型
+     * @return 不支持类型返回 false，支持类型返回 showNewMentionMessageBar 值
+     */
+    public boolean isShowNewMentionMessageBar(Conversation.ConversationType type) {
+        if (showNewMentionMessageBar) {
+            switch (type) {
+                case GROUP:
+                case DISCUSSION:
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param showNewMentionMessageBar 是否显示会话页面右上角的未读 @ 消息数提示，仅支持设置群组
+     */
+    public void setShowNewMentionMessageBar(boolean showNewMentionMessageBar) {
+        this.showNewMentionMessageBar = showNewMentionMessageBar;
+    }
+
+    public int getConversationHistoryMessageCount() {
+        return conversationHistoryMessageCount;
+    }
+
+    public void setConversationHistoryMessageCount(int conversationHistoryMessageCount) {
+        this.conversationHistoryMessageCount = conversationHistoryMessageCount;
+    }
+
+    public int getConversationRemoteMessageCount() {
+        return conversationRemoteMessageCount;
+    }
+
+    public void setConversationRemoteMessageCount(int conversationRemoteMessageCount) {
+        this.conversationRemoteMessageCount = conversationRemoteMessageCount;
+    }
+
+    public int getConversationShowUnreadMessageCount() {
+        return conversationShowUnreadMessageCount;
+    }
+
+    public void setConversationShowUnreadMessageCount(int conversationShowUnreadMessageCount) {
+        this.conversationShowUnreadMessageCount = conversationShowUnreadMessageCount;
     }
 
     /**

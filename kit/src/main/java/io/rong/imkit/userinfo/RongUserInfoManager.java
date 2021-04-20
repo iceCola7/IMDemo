@@ -147,9 +147,23 @@ public class RongUserInfoManager {
         mIsCacheGroupInfo = isCacheGroupInfo;
     }
 
-    public void setGroupUserInfoProvider(UserDataProvider.GroupUserInfoProvider groupUserInfoProvider, boolean isCacheGroupMemberInfo) {
+    /**
+     * <p>设置群成员提供者</p>
+     * <p>可以使用此方法，修改群组中用户昵称</p>
+     * <p>设置后，当 sdk 界面展示用户信息时，会回调 {@link UserDataProvider.GroupUserInfoProvider#getGroupUserInfo(String, String)}
+     * 使用者只需要根据对应的 groupId, userId 提供对应的用户信息 {@link GroupUserInfo}。
+     * 如果需要异步从服务器获取用户信息，使用者可以在此方法中发起异步请求，然后返回 null 信息。
+     * 在异步请求结果返回后，根据返回的结果调用 {@link #refreshGroupUserInfoCache(GroupUserInfo)} 刷新信息。</p>
+     *
+     * @param groupUserInfoProvider 群组用户信息提供者。
+     * @param isCacheGroupUserInfo  设置是否由 IMKit 来缓存 GroupUserInfo。<br>
+     *                         如果 App 提供的 GroupUserInfoProvider。
+     *                         每次都需要通过网络请求数据，而不是将数据缓存到本地，会影响信息的加载速度；<br>
+     *                         此时最好将本参数设置为 true，由 IMKit 来缓存信息。
+     */
+    public void setGroupUserInfoProvider(UserDataProvider.GroupUserInfoProvider groupUserInfoProvider, boolean isCacheGroupUserInfo) {
         mUserDataDelegate.setGroupUserInfoProvider(groupUserInfoProvider);
-        mIsCacheGroupMemberInfo = isCacheGroupMemberInfo;
+        mIsCacheGroupMemberInfo = isCacheGroupUserInfo;
     }
 
     public UserDatabase getUserDatabase() {

@@ -31,8 +31,6 @@ public class FeatureConfig {
     private int audioNBEncodingBitRate;
     //设置 AMR_WB 语音消息的码率 (单位 bps)[rc_audio_wb_encoding_bit_rate]
     private int audioWBEncodingBitRate;
-    //设置 AAC 语音消息的码率 (单位 bps)[rc_audio_aac_encoding_bit_rate]
-    private int audioAACEncodingBitRate;
 
     private KitImageEngine mKitImageEngine;
 
@@ -51,7 +49,6 @@ public class FeatureConfig {
         isQuickReplyEnable = false;
         audioNBEncodingBitRate = 7950;
         audioWBEncodingBitRate = 12650;
-        audioAACEncodingBitRate = 16000;
         mKitImageEngine = new GlideKitImageEngine();
     }
 
@@ -106,10 +103,6 @@ public class FeatureConfig {
         this.audioWBEncodingBitRate = audioWBEncodingBitRate;
     }
 
-    public void setAudioAACEncodingBitRate(int audioAACEncodingBitRate) {
-        this.audioAACEncodingBitRate = audioAACEncodingBitRate;
-    }
-
     public void setKitImageEngine(KitImageEngine engine) {
         if (engine != null)
             this.mKitImageEngine = engine;
@@ -129,10 +122,6 @@ public class FeatureConfig {
 
     public int getAudioWBEncodingBitRate() {
         return audioWBEncodingBitRate;
-    }
-
-    public int getAudioAACEncodingBitRate() {
-        return audioAACEncodingBitRate;
     }
 
     public IQuickReplyProvider getQuickReplyProvider() {

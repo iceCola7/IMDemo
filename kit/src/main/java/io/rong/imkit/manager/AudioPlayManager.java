@@ -89,7 +89,11 @@ public class AudioPlayManager implements SensorEventListener {
                         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                             @Override
                             public void onPrepared(MediaPlayer mp) {
-                                mp.seekTo(positions);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    mp.seekTo(positions, mp.SEEK_CLOSEST);
+                                } else {
+                                    mp.seekTo(positions);
+                                }
                             }
                         });
                         mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
@@ -188,6 +192,7 @@ public class AudioPlayManager implements SensorEventListener {
             }
             FileInputStream fis = null;
             try {
+                final int positions = mMediaPlayer.getCurrentPosition();
                 mMediaPlayer.reset();
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     AudioAttributes attributes = new AudioAttributes.Builder()
@@ -211,6 +216,17 @@ public class AudioPlayManager implements SensorEventListener {
                             // Restore interrupted state...
                             Thread.currentThread().interrupt();
                         }
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            mp.seekTo(positions, mp.SEEK_CLOSEST);
+                        } else {
+                            mp.seekTo(positions);
+                        }
+                    }
+                });
+                mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
+                    @Override
+                    public void onSeekComplete(MediaPlayer mp) {
                         mp.start();
                     }
                 });

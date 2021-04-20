@@ -393,6 +393,8 @@ public class IMCenter {
         RongConfigCenter.conversationListConfig().setBehaviorListener(listener);
     }
 
+
+
     /**
      * <p>发送消息。
      * 通过 {@link IRongCallback.ISendMessageCallback}
@@ -1216,8 +1218,6 @@ public class IMCenter {
     public void logout() {
         RongIMClient.getInstance().logout();
         RongExtensionManager.getInstance().disconnect();
-        // RongUserInfoManager.getInstance().uninit();
-        //todo
     }
 
     /**
@@ -1676,6 +1676,7 @@ public class IMCenter {
 
         }
 
+
         /**
          * 群组和讨论组中，某人发起了回执请求，会话中其余人会收到该请求，并回调此方法。
          * <p>
@@ -1695,7 +1696,6 @@ public class IMCenter {
                     }
                 }
             });
-
         }
 
         /**

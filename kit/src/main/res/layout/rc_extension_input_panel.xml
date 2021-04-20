@@ -11,10 +11,10 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginBottom="6.5dp"
+        android:src="@drawable/rc_ext_toggle_voice"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/rc_ext_toggle_voice" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
         android:id="@+id/edit_btn"
@@ -60,10 +60,10 @@
         android:layout_marginTop="6.5dp"
         android:layout_marginBottom="6.5dp"
         android:layout_marginEnd="5dp"
+        android:src="@drawable/rc_ext_input_panel_emoji"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/input_panel_add_or_send"
-        app:srcCompat="@drawable/rc_ext_input_panel_emoji" />
+        app:layout_constraintEnd_toStartOf="@+id/input_panel_add_or_send" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/input_panel_add_or_send"
@@ -81,10 +81,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="4dp"
+            android:src="@drawable/rc_ext_input_panel_add"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/rc_ext_input_panel_add" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Button
             android:id="@+id/input_panel_send_btn"

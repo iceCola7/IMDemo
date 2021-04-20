@@ -4,11 +4,11 @@ import android.os.Bundle;
 
 import java.util.List;
 
+import io.rong.imkit.config.RongConfigCenter;
 import io.rong.imkit.conversation.messgelist.viewmodel.MessageViewModel;
 import io.rong.imkit.event.Event;
 import io.rong.imkit.event.uievent.ScrollEvent;
 import io.rong.imkit.event.uievent.ScrollToEndEvent;
-import io.rong.imkit.event.uievent.SmoothScrollEvent;
 import io.rong.imkit.model.UiMessage;
 import io.rong.imkit.utils.RouteUtils;
 import io.rong.imkit.widget.refresh.constant.RefreshState;
@@ -100,6 +100,9 @@ public class HistoryState implements IMessageState {
         //不在最底部，添加到未读列表
         if (!viewModel.isScrollToBottom()) {
             viewModel.getNewUnReadMessages().add(uiMessage);
+            if (RongConfigCenter.conversationConfig().isShowNewMentionMessageBar(uiMessage.getConversationType())) {
+                viewModel.updateMentionMessage(uiMessage.getMessage());
+            }
         }
         //直接显示messagebar
         viewModel.processNewMessageUnread(false);
@@ -133,6 +136,11 @@ public class HistoryState implements IMessageState {
         });
     }
 
+    @Override
+    public void onNewMentionMessageBarClick(MessageViewModel viewModel) {
+        IMessageState.normalState.onNewMentionMessageBarClick(viewModel);
+    }
+
     /**
      * @param viewModel 历史消息滑动到底部不做任何处理，继续加载更多
      */
@@ -146,7 +154,7 @@ public class HistoryState implements IMessageState {
      */
     @Override
     public void onHistoryBarClick(MessageViewModel viewModel) {
-
+        IMessageState.normalState.onHistoryBarClick(viewModel);
     }
 
 }

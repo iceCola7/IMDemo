@@ -33,6 +33,8 @@ public interface IMessageState {
 
     void onNewMessageBarClick(MessageViewModel viewModel);
 
+    void onNewMentionMessageBarClick(MessageViewModel viewModel);
+
     void onScrollToBottom(MessageViewModel viewModel);
 
     void onHistoryBarClick(MessageViewModel viewModel);

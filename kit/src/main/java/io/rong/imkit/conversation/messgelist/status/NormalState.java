@@ -8,6 +8,7 @@ import io.rong.imkit.config.RongConfigCenter;
 import io.rong.imkit.conversation.messgelist.viewmodel.MessageViewModel;
 import io.rong.imkit.event.Event;
 import io.rong.imkit.event.uievent.ScrollEvent;
+import io.rong.imkit.event.uievent.ScrollMentionEvent;
 import io.rong.imkit.event.uievent.ScrollToEndEvent;
 import io.rong.imkit.event.uievent.SmoothScrollEvent;
 import io.rong.imkit.model.UiMessage;
@@ -17,11 +18,14 @@ import io.rong.imlib.model.Conversation;
 import io.rong.imlib.model.Message;
 
 import static io.rong.imkit.conversation.messgelist.viewmodel.MessageViewModel.DEFAULT_COUNT;
+import static io.rong.imkit.conversation.messgelist.viewmodel.MessageViewModel.DEFAULT_REMOTE_COUNT;
 
 /**
  * 会话页面当前状态，正常模式
  */
 public class NormalState implements IMessageState {
+
+    private boolean isLoading;
 
     NormalState() {
 
@@ -30,8 +34,8 @@ public class NormalState implements IMessageState {
     /**
      * 正常模式，初始化，拉取本地历史记录，处理未读数
      *
-     * @param messageViewModel
-     * @param bundle
+     * @param messageViewModel MessageViewModel
+     * @param bundle           Bundle
      */
     @Override
     public void init(final MessageViewModel messageViewModel, Bundle bundle) {
@@ -100,6 +104,8 @@ public class NormalState implements IMessageState {
                         if (index >= 0) {
                             messageViewModel.executePageEvent(new ScrollEvent(index));
                         }
+                        messageViewModel.setNewUnReadMentionMessages(messages);
+                        messageViewModel.executePageEvent(new ScrollMentionEvent());
                     }
                     messageViewModel.setInitMentionedMessageFinish(true);
                     messageViewModel.cleanUnreadStatus();
@@ -142,7 +148,7 @@ public class NormalState implements IMessageState {
     /**
      * 正常模式不需要上拉加载更多，直接关闭
      *
-     * @param viewModel
+     * @param viewModel MessageViewModel
      */
     @Override
     public void onLoadMore(MessageViewModel viewModel) {
@@ -157,16 +163,17 @@ public class NormalState implements IMessageState {
     /**
      * 正常模式，按流程处理
      *
-     * @param viewModel
-     * @param uiMessage
-     * @param left
-     * @param hasPackage
-     * @param offline
+     * @param viewModel  MessageViewModel
+     * @param uiMessage  接收到的消息对象
+     * @param left       每个数据包数据逐条上抛后，还剩余的条数
+     * @param hasPackage 是否在服务端还存在未下发的消息包
+     * @param offline    消息是否离线消息
      */
     @Override
     public void onReceived(MessageViewModel viewModel, UiMessage uiMessage, int left, boolean hasPackage, boolean offline) {
         viewModel.getUiMessages().add(uiMessage);
         viewModel.updateUiMessages(false);
+        viewModel.updateMentionMessage(uiMessage.getMessage());
         // newMessageBar 逻辑
         if (RongConfigCenter.conversationConfig().isShowNewMessageBar(uiMessage.getConversationType())) {
             //不在最底部，添加到未读列表
@@ -184,13 +191,92 @@ public class NormalState implements IMessageState {
         } else {
             viewModel.executePostPageEvent(new ScrollToEndEvent());
         }
-
     }
 
     @Override
     public void onNewMessageBarClick(MessageViewModel viewModel) {
         viewModel.cleanUnreadNewCount();
         viewModel.executePageEvent(new ScrollToEndEvent());
+    }
+
+    @Override
+    public void onNewMentionMessageBarClick(MessageViewModel viewModel) {
+        List<Message> mMentionMessages = viewModel.getNewUnReadMentionMessages();
+        if (mMentionMessages.size() > 0) {
+            io.rong.imlib.model.Message message = mMentionMessages.get(0);
+            int position = viewModel.findPositionByMessageId(message.getMessageId());
+            if (position >= 0) {
+                viewModel.executePageEvent(new ScrollEvent(position));
+            } else {
+                boolean isNewMentionMessage = false;
+                if (viewModel.getUiMessages().size() > 0) {
+                    UiMessage lastMessage = viewModel.getUiMessages().get(viewModel.getUiMessages().size() - 1);
+                    isNewMentionMessage = message.getSentTime() > lastMessage.getSentTime();
+                }
+                viewModel.getUiMessages().clear();
+                getMentionMessage(viewModel, isNewMentionMessage, message);
+            }
+        }
+        viewModel.processNewMentionMessageUnread(true);
+    }
+
+    private void getMentionMessage(final MessageViewModel viewModel, boolean isNewMentionMessage, Message message) {
+        if (isNewMentionMessage) {
+            if (!isLoading) {
+                isLoading = true;
+                RongIMClient.getInstance().getHistoryMessages(viewModel.getCurConversationType(), viewModel.getCurTargetId(), message.getSentTime(), DEFAULT_COUNT, DEFAULT_COUNT, new RongIMClient.ResultCallback<List<Message>>() {
+                    @Override
+                    public void onSuccess(List<Message> messages) {
+                        if (messages != null && messages.size() > 0) {
+                            //如果不等于默认拉取条数，则证明本地拉取完毕记录标记位
+                            if (messages.size() < DEFAULT_COUNT * 2 + 1) {
+                                viewModel.setState(IMessageState.normalState);
+                                viewModel.onLoadMoreMessage(messages);
+                            } else {
+                                viewModel.onLoadMoreMessage(messages.subList(0, DEFAULT_COUNT * 2));
+                                viewModel.setState(IMessageState.historyState);
+                            }
+                        } else {
+                            viewModel.setState(IMessageState.normalState);
+                        }
+                        viewModel.executePageEvent(new Event.RefreshEvent(RefreshState.LoadFinish));
+                        isLoading = false;
+                    }
+
+                    @Override
+                    public void onError(RongIMClient.ErrorCode errorCode) {
+                        viewModel.executePageEvent(new Event.RefreshEvent(RefreshState.LoadFinish));
+                        isLoading = false;
+                    }
+                });
+            }
+        } else {
+            RongIMClient.getInstance().getHistoryMessages(viewModel.getCurConversationType(), viewModel.getCurTargetId(), message.getSentTime(), 0, DEFAULT_COUNT, new RongIMClient.ResultCallback<List<Message>>() {
+                //返回列表（10，9，8，7，6，按messageId倒序）
+                @Override
+                public void onSuccess(List<Message> messages) {
+                    //不为空且大于0证明还有本地数据
+                    if (messages != null && messages.size() > 0) {
+                        List<Message> result;
+                        //如果不等于默认拉取条数，则证明本地拉取完毕记录标记位
+                        if (messages.size() < DEFAULT_COUNT + 1) {
+                            result = messages;
+                            viewModel.setState(IMessageState.normalState);
+                        } else {
+                            result = messages.subList(1, DEFAULT_COUNT + 1);
+                            viewModel.setState(IMessageState.historyState);
+                        }
+                        viewModel.onGetHistoryMessage(result);
+                        viewModel.executePageEvent(new ScrollEvent(0));
+                    }
+                }
+
+                @Override
+                public void onError(RongIMClient.ErrorCode errorCode) {
+
+                }
+            });
+        }
     }
 
     @Override
@@ -230,11 +316,11 @@ public class NormalState implements IMessageState {
                 if (messages != null && messages.size() > 0) {
                     //如果不等于默认拉取条数，则证明本地拉取完毕记录标记位
                     List<Message> result;
-                    if (messages.size() < DEFAULT_COUNT + 1) {
+                    if (messages.size() < DEFAULT_REMOTE_COUNT + 1) {
                         messageViewModel.setRemoteMessageLoadFinish(true);
                         result = messages;
                     } else {
-                        result = messages.subList(0, DEFAULT_COUNT);
+                        result = messages.subList(0, DEFAULT_REMOTE_COUNT);
                     }
                     messageViewModel.onGetHistoryMessage(result);
                 } else {
@@ -284,5 +370,4 @@ public class NormalState implements IMessageState {
             }
         });
     }
-
 }

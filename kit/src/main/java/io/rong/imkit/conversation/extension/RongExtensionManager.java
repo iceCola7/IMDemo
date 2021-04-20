@@ -16,6 +16,7 @@ import io.rong.imkit.feature.destruct.DestructExtensionModule;
 import io.rong.imkit.feature.forward.ForwardExtensionModule;
 import io.rong.imkit.feature.location.LocationExtensionModule;
 import io.rong.imkit.feature.mention.IExtensionEventWatcher;
+import io.rong.imkit.feature.mention.RongMentionManager;
 import io.rong.imkit.feature.publicservice.PublicServiceManager;
 import io.rong.imkit.feature.quickreply.QuickReplyExtensionModule;
 import io.rong.imkit.feature.reference.ReferenceManager;
@@ -35,7 +36,7 @@ public class RongExtensionManager {
     private static IExtensionConfig mExtensionConfig;
 
     private RongExtensionManager() {
-
+        addExtensionEventWatcher(RongMentionManager.getInstance());
     }
 
     private static class SingletonHolder {
@@ -209,6 +210,12 @@ public class RongExtensionManager {
     public void addExtensionEventWatcher(IExtensionEventWatcher watcher) {
         if (!mExtensionEventWatcher.contains(watcher)) {
             mExtensionEventWatcher.add(watcher);
+        }
+    }
+
+    public void removeExtensionEventWatcher(IExtensionEventWatcher watcher) {
+        if (mExtensionEventWatcher.contains(watcher)) {
+            mExtensionEventWatcher.remove(watcher);
         }
     }
 

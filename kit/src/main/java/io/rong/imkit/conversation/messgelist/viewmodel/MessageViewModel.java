@@ -18,8 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.rong.common.FileUtils;
 import io.rong.common.RLog;
@@ -47,7 +49,6 @@ import io.rong.imkit.event.uievent.InputBarEvent;
 import io.rong.imkit.event.uievent.PageEvent;
 import io.rong.imkit.event.uievent.ScrollToEndEvent;
 import io.rong.imkit.event.uievent.ShowLongClickDialogEvent;
-import io.rong.imkit.event.uievent.SmoothScrollEvent;
 import io.rong.imkit.event.uievent.ToastEvent;
 import io.rong.imkit.feature.destruct.DestructManager;
 import io.rong.imkit.feature.forward.ForwardClickActions;
@@ -66,6 +67,7 @@ import io.rong.imkit.widget.cache.MessageList;
 import io.rong.imlib.IRongCallback;
 import io.rong.imlib.RongIMClient;
 import io.rong.imlib.model.Conversation;
+import io.rong.imlib.model.MentionedInfo;
 import io.rong.imlib.model.Message;
 import io.rong.imlib.model.MessageContent;
 import io.rong.imlib.model.ReadReceiptInfo;
@@ -82,8 +84,9 @@ import io.rong.message.VoiceMessage;
 
 public class MessageViewModel extends AndroidViewModel implements MessageEventListener {
     private static final String TAG = "MessageViewModel";
-    public static final int DEFAULT_COUNT = 10;
-    public static final int SHOW_UNREAD_MESSAGE_COUNT = DEFAULT_COUNT;
+    public static final int DEFAULT_COUNT = RongConfigCenter.conversationConfig().getConversationHistoryMessageCount();
+    public static final int DEFAULT_REMOTE_COUNT = RongConfigCenter.conversationConfig().getConversationRemoteMessageCount();
+    public static final int SHOW_UNREAD_MESSAGE_COUNT = RongConfigCenter.conversationConfig().getConversationShowUnreadMessageCount();
     private List<UiMessage> mUiMessages = new MessageList<>(6000);
     private List<UiMessage> mSelectedUiMessage = new ArrayList<>();
     private MediatorLiveData<PageEvent> mPageEventLiveData = new MediatorLiveData<>();
@@ -94,8 +97,10 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
     private boolean mRemoteMessageLoadFinish = false;
     private boolean mInitUnreadMessageFinish;
     private List<UiMessage> mNewUnReadMessages = new ArrayList<>();
+    private List<Message> mNewUnReadMentionMessages = new CopyOnWriteArrayList<>();
     private MediatorLiveData<Integer> mHistoryMessageUnreadLiveData = new MediatorLiveData<>();
     private MediatorLiveData<Integer> mNewMessageUnreadLiveData = new MediatorLiveData<>();
+    private MediatorLiveData<Integer> mNewMentionMessageUnreadLiveData = new MediatorLiveData<>();
     private boolean mInitMentionedMessageFinish;
     private MediatorLiveData<Boolean> mIsEditStatus = new MediatorLiveData<>();
 
@@ -375,10 +380,7 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
     }
 
     private void playOrDownloadHQVoiceMsg(HQVoiceMessage content, UiMessage uiMessage) {
-        boolean ifDownloadHQVoiceMsg = (content.getLocalPath() == null || TextUtils.isEmpty(content.getLocalPath().toString()));
-        if (uiMessage.getMessage().getMessageDirection() == Message.MessageDirection.RECEIVE) {
-            ifDownloadHQVoiceMsg = (content.getLocalPath() == null || TextUtils.isEmpty(content.getLocalPath().toString()) || !FileUtils.isFileExistsWithUri(getApplication(), content.getLocalPath()));
-        }
+        boolean ifDownloadHQVoiceMsg = (content.getLocalPath() == null || TextUtils.isEmpty(content.getLocalPath().toString()) || !FileUtils.isFileExistsWithUri(getApplication(), content.getLocalPath()));
         if (ifDownloadHQVoiceMsg) {
             downloadHQVoiceMsg(uiMessage);
         } else {
@@ -654,9 +656,6 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                         uiMessage.setState(State.NORMAL);
                         break;
                     case DownloadEvent.PROGRESS:
-                        if (!(uiMessage.getState() == State.START || uiMessage.getState() == State.PROGRESS)) {
-                            return;
-                        }
                         uiMessage.setState(State.PROGRESS);
                         uiMessage.setProgress(event.getProgress());
                         break;
@@ -669,9 +668,6 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                         break;
                     case DownloadEvent.PAUSE:
                         uiMessage.setState(State.PAUSE);
-                        break;
-                    case DownloadEvent.START:
-                        uiMessage.setState(State.START);
                         break;
                 }
                 uiMessage.setMessage(msg);
@@ -742,6 +738,17 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                 mNewMessageUnreadLiveData.setValue(mNewUnReadMessages.size());
             } else {
                 mNewMessageUnreadLiveData.postValue(mNewUnReadMessages.size());
+            }
+        }
+    }
+
+
+    public void processNewMentionMessageUnread(boolean isMainThread) {
+        if (RongConfigCenter.conversationConfig().isShowNewMentionMessageBar(mCurConversationType)) {
+            if (isMainThread) {
+                mNewMentionMessageUnreadLiveData.setValue(mNewUnReadMentionMessages.size());
+            } else {
+                mNewMentionMessageUnreadLiveData.postValue(mNewUnReadMentionMessages.size());
             }
         }
     }
@@ -887,6 +894,23 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         }
     }
 
+    public void updateMentionMessage(io.rong.imlib.model.Message message) {
+        if (RongConfigCenter.conversationConfig().isShowNewMentionMessageBar(message.getConversationType())
+                && message != null && message.getContent() != null && message.getContent().getMentionedInfo() != null) {
+            MentionedInfo mentionedInfo = message.getContent().getMentionedInfo();
+            MentionedInfo.MentionedType type = mentionedInfo.getType();
+            if (type == MentionedInfo.MentionedType.ALL && message.getSenderUserId() != null &&
+                    !message.getSenderUserId().equals(RongIMClient.getInstance().getCurrentUserId())) {
+                mNewUnReadMentionMessages.add(message);
+            } else if (type == MentionedInfo.MentionedType.PART &&
+                    mentionedInfo.getMentionedUserIdList() != null &&
+                    mentionedInfo.getMentionedUserIdList().contains(RongIMClient.getInstance().getCurrentUserId())) {
+                mNewUnReadMentionMessages.add(message);
+            }
+            processNewMentionMessageUnread(false);
+        }
+    }
+
     /**
      * 异步线程切换到主线程执行
      *
@@ -958,6 +982,12 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
     public void unreadBarClick() {
         if (mState != null) {
             mState.onHistoryBarClick(this);
+        }
+    }
+
+    public void newMentionMessageBarClick() {
+        if (mState != null) {
+            mState.onNewMentionMessageBarClick(this);
         }
     }
 
@@ -1215,6 +1245,7 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                 return false;
             }
             UiMessage uiMessage = findUIMessage(message.getMessageId());
+            removeRecallMentionMsg(message);
             if (uiMessage != null) {
                 MessageContent content = uiMessage.getMessage().getContent();
                 if (content instanceof VoiceMessage) {
@@ -1241,6 +1272,23 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
             return false;
         }
     };
+
+    private void removeRecallMentionMsg(Message message) {
+        //遍历 @消息未读列表，如果存在撤回消息则移除，刷新 @ Bar
+        boolean needRefresh = false;
+
+        int size = mNewUnReadMentionMessages.size();
+        for (int i = size - 1 ; i >= 0; i--) {
+            if (mNewUnReadMentionMessages.get(i).getMessageId() == message.getMessageId()) {
+                mNewUnReadMentionMessages.remove(mNewUnReadMentionMessages.get(i));
+                needRefresh = true;
+                break;
+            }
+        }
+        if (needRefresh) {
+            processNewMentionMessageUnread(true);
+        }
+    }
 
 
     private RongIMClient.ConnectionStatusListener mConnectionStatusListener = new RongIMClient.ConnectionStatusListener() {
@@ -1388,6 +1436,14 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         return mNewUnReadMessages;
     }
 
+    public List<Message> getNewUnReadMentionMessages() {
+        return mNewUnReadMentionMessages;
+    }
+
+    public void setNewUnReadMentionMessages(List<Message> newUnReadMentionMessages) {
+        this.mNewUnReadMentionMessages = newUnReadMentionMessages;
+    }
+
     public void showHistoryBar(int unreadMessageCount) {
         mHistoryMessageUnreadLiveData.setValue(unreadMessageCount);
     }
@@ -1401,6 +1457,21 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         return mHistoryMessageUnreadLiveData;
     }
 
+    public void showNewMentionMessageBar(int unreadMessageCount) {
+        mNewMentionMessageUnreadLiveData.setValue(unreadMessageCount);
+    }
+
+    public void hideNewMentionMessageBar() {
+        if (mNewUnReadMentionMessages != null) {
+            mNewUnReadMentionMessages.clear();
+        }
+        mNewMentionMessageUnreadLiveData.setValue(0);
+    }
+
+    public LiveData<Integer> getNewMentionMessageUnreadLiveData() {
+        return mNewMentionMessageUnreadLiveData;
+    }
+
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
         //判断是否滑动到底部
         if (!recyclerView.canScrollVertically(1)) {
@@ -1409,9 +1480,9 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         } else {
             setScrollToBottom(false);
         }
+        RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
         if (RongConfigCenter.conversationConfig().isShowHistoryMessageBar(mCurConversationType) && getFirstUnreadMessage() != null) {
             int firstPosition = findPositionByMessageId(getFirstUnreadMessage().getMessageId());
-            RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
             if (layoutManager instanceof LinearLayoutManager) {
                 int firstVisibleItemPosition = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
                 if (firstVisibleItemPosition <= firstPosition) {
@@ -1419,6 +1490,26 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                 }
             }
         }
+
+        if (RongConfigCenter.conversationConfig().isShowHistoryMessageBar(mCurConversationType) && mNewUnReadMentionMessages != null && mNewUnReadMentionMessages.size() > 0 && getUiMessages().size() > 0) {
+            int firstVisibleItemPosition = 0;
+            int lastPosition = 0;
+            if (layoutManager instanceof LinearLayoutManager) {
+                firstVisibleItemPosition = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+                lastPosition = ((LinearLayoutManager) layoutManager).findLastVisibleItemPosition();
+            }
+            UiMessage firstMessage = getUiMessages().get(Math.max(firstVisibleItemPosition, 0));
+            UiMessage lastMessage = getUiMessages().get(lastPosition < getUiMessages().size() ? lastPosition : getUiMessages().size() - 1);
+            long topTime = firstMessage.getSentTime();
+            long bottomTime = lastMessage.getSentTime();
+            int size = mNewUnReadMentionMessages.size();
+            for (int i = size - 1 ; i >= 0; i--) {
+                if (mNewUnReadMentionMessages.get(i).getSentTime() >= topTime && mNewUnReadMentionMessages.get(i).getSentTime() <= bottomTime) {
+                    mNewUnReadMentionMessages.remove(mNewUnReadMentionMessages.get(i));
+                }
+            }
+        }
+        processNewMentionMessageUnread(true);
     }
 
 

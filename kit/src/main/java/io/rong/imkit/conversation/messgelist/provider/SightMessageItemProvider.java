@@ -89,7 +89,7 @@ public class SightMessageItemProvider extends BaseMessageItemProvider<SightMessa
             loadingProgress.setProgress(progress, true);
             holder.setVisible(R.id.rc_sight_tag, false);
             loadingProgress.setVisibility(View.VISIBLE);
-            loadingProgress.setVisibility(View.GONE);
+            compressProgress.setVisibility(View.GONE);
             //发送小视频时取消发送，这个功能暂时未打开
             //handleSendingView(message, holder);
         } else if (status.equals(Message.SentStatus.SENDING)) {

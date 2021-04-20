@@ -7,20 +7,21 @@ android {
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 20210412
+        versionName "5.1.1"
+        buildConfigField "String", "IMSDK_VER", "${IMSDK_VER}"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
     }
-    
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    
+
     sourceSets {
         main {
             jniLibs.srcDirs = ['libs']
@@ -31,20 +32,20 @@ android {
 
 dependencies {
     api fileTree(include: ['*.jar'], dir: 'libs')
-    api 'cn.rongcloud.sdk:im_lib:5.1.0.1'
+    api 'cn.rongcloud.sdk:im_lib:5.1.1'
     //基础布局
-    implementation 'androidx.appcompat:appcompat:1.2.0'
+    api 'androidx.appcompat:appcompat:1.2.0'
     api 'androidx.fragment:fragment:1.2.5'
     api 'androidx.recyclerview:recyclerview:1.1.0'
     api 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    api 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     api "androidx.viewpager2:viewpager2:1.1.0-alpha01"
     // content 协议头处理
-    implementation "androidx.documentfile:documentfile:1.0.1"
+    api "androidx.documentfile:documentfile:1.0.1"
     //本地广播
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    api 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     //数据存储
-    implementation "androidx.room:room-runtime:2.2.5"
+    api "androidx.room:room-runtime:2.2.5"
     annotationProcessor "androidx.room:room-compiler:2.2.5"
     //图片加载
     api 'com.github.bumptech.glide:glide:4.11.0'
@@ -80,3 +81,4 @@ task clearJar(type: Delete) {
     delete OUTPUT_PATH + JAR_NAME + '.jar'
 }
 makeJar.dependsOn(clearJar, build)
+//apply from: './bintray.gradle'

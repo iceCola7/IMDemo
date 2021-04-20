@@ -170,78 +170,77 @@ public class SendMediaManager {
 
         @Override
         public void run() {
-            final String originLocalPath = ((SightMessage) executingMessage.getContent()).getLocalPath().toString();
-            final String compressPath = KitStorageUtils.getImageSavePath(IMCenter.getInstance().getContext()) + File.separator
-                    + "VID_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CHINA).format(new Date()) + ".mp4";
-            VideoCompress.compressVideo(IMCenter.getInstance().getContext(), originLocalPath, compressPath, new VideoCompress.CompressListener() {
-                @Override
-                public void onStart() {
-                    executingMessage.setSentStatus(Message.SentStatus.SENDING);
-                    RongIMClient.getInstance().setMessageSentStatus(executingMessage, null);
-                    IMCenter.getInstance().refreshMessage(executingMessage);
-                    RLog.d(TAG, "Compressing video file starts.");
+            boolean isDestruct = false;
+            if (executingMessage.getContent() != null) {
+                isDestruct = executingMessage.getContent().isDestruct();
+            }
+            IMCenter.getInstance().sendMediaMessage(executingMessage, isDestruct ? IMCenter.getInstance().getContext().getString(R.string.rc_conversation_summary_content_burn) : null,
+                    null, new IRongCallback.ISendMediaMessageCallback() {
+                        @Override
+                        public void onAttached(Message message) {
+                            executingMessage.setSentStatus(Message.SentStatus.SENDING);
+                            RongIMClient.getInstance().setMessageSentStatus(executingMessage, null);
+                            IMCenter.getInstance().refreshMessage(executingMessage);
+                            RLog.d(TAG, "Compressing video file starts.");
+                        }
 
-                }
+                        @Override
+                        public void onSuccess(Message message) {
+                            polling();
+                        }
 
-                @Override
-                public void onSuccess() {
-                    RLog.d(TAG, "Compressing video file successes.");
-                    if (executingMessage == null) {
-                        return;
-                    }
-                    ((SightMessage) executingMessage.getContent()).setLocalPath(Uri.parse("file://" + compressPath));
-                    boolean isDestruct = false;
-                    if (executingMessage.getContent() != null)
-                        isDestruct = executingMessage.getContent().isDestruct();
-                    File file = new File(compressPath);
-                    ((SightMessage) executingMessage.getContent()).setSize(file.length());
-                    IMCenter.getInstance().sendMediaMessage(executingMessage, isDestruct ? IMCenter.getInstance().getContext().getString(R.string.rc_conversation_summary_content_burn) : null,
-                            null, new IRongCallback.ISendMediaMessageCallback() {
-                                @Override
-                                public void onAttached(Message message) {
+                        @Override
+                        public void onError(Message message, RongIMClient.ErrorCode errorCode) {
+                            executingMessage.setSentStatus(Message.SentStatus.FAILED);
+                            RongIMClient.getInstance().setMessageSentStatus(executingMessage, null);
+                            IMCenter.getInstance().refreshMessage(executingMessage);
+                            Toast.makeText(IMCenter.getInstance().getContext(), IMCenter.getInstance().getContext().getString(R.string.rc_picsel_video_corrupted),
+                                    Toast.LENGTH_SHORT).show();
+                            polling();
+                            RLog.d(TAG, "Compressing video file failed.");
+                        }
 
-                                }
+                        @Override
+                        public void onProgress(Message message, int progress) {
+                        }
 
-                                @Override
-                                public void onSuccess(Message message) {
-                                    polling();
-                                }
+                        @Override
+                        public void onCanceled(Message message) {
 
-                                @Override
-                                public void onError(Message message, RongIMClient.ErrorCode errorCode) {
-                                    //FileUtils.removeFile(compressPath);
-                                    polling();
-                                }
-
-                                @Override
-                                public void onProgress(Message message, int progress) {
-
-                                }
-
-                                @Override
-                                public void onCanceled(Message message) {
-
-                                }
-                            });
-                    RLog.d(TAG, "Compressing video file successes.");
-                }
-
-                @Override
-                public void onFail() {
-                    executingMessage.setSentStatus(Message.SentStatus.FAILED);
-                    RongIMClient.getInstance().setMessageSentStatus(executingMessage, null);
-                    IMCenter.getInstance().refreshMessage(executingMessage);
-                    Toast.makeText(IMCenter.getInstance().getContext(), IMCenter.getInstance().getContext().getString(R.string.rc_picsel_video_corrupted),
-                            Toast.LENGTH_SHORT).show();
-                    polling();
-                    RLog.d(TAG, "Compressing video file failed.");
-                }
-
-                @Override
-                public void onProgress(float percent) {
-                    RLog.d(TAG, "The progress of compressing video file is " + percent);
-                }
-            });
+                        }
+                    });
+//            final String originLocalPath = ((SightMessage) executingMessage.getContent()).getLocalPath().toString();
+//            final String compressPath = KitStorageUtils.getImageSavePath(IMCenter.getInstance().getContext()) + File.separator
+//                    + "VID_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.CHINA).format(new Date()) + ".mp4";
+//            VideoCompress.compressVideo(IMCenter.getInstance().getContext(), originLocalPath, compressPath, new VideoCompress.CompressListener() {
+//                @Override
+//                public void onStart() {
+//
+//                }
+//
+//                @Override
+//                public void onSuccess() {
+//                    RLog.d(TAG, "Compressing video file successes.");
+//                    if (executingMessage == null) {
+//                        return;
+//                    }
+//                    ((SightMessage) executingMessage.getContent()).setLocalPath(Uri.parse("file://" + compressPath));
+//
+//                    File file = new File(compressPath);
+//                    ((SightMessage) executingMessage.getContent()).setSize(file.length());
+//
+//                }
+//
+//                @Override
+//                public void onFail() {
+//
+//                }
+//
+//                @Override
+//                public void onProgress(float percent) {
+//                    RLog.d(TAG, "The progress of compressing video file is " + percent);
+//                }
+//            });
         }
 
     }

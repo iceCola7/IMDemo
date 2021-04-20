@@ -2,12 +2,15 @@ package io.rong.imkit.conversation.messgelist.provider;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -21,7 +24,7 @@ import io.rong.imkit.R;
 import io.rong.imkit.feature.location.AMapPreviewActivity;
 import io.rong.imkit.feature.location.AMapPreviewActivity2D;
 import io.rong.imkit.model.UiMessage;
-import io.rong.imkit.widget.RCMessageFrameLayout;
+import io.rong.imkit.utils.RongUtils;
 import io.rong.imkit.widget.adapter.IViewProviderListener;
 import io.rong.imkit.widget.adapter.ViewHolder;
 import io.rong.imkit.widget.glide.RoundedCornersTransform;
@@ -33,10 +36,24 @@ import static io.rong.imkit.conversation.messgelist.provider.SightMessageItemPro
 
 public class LocationMessageItemProvider extends BaseMessageItemProvider<LocationMessage> {
     private static final String TAG = LocationMessageItemProvider.class.getSimpleName();
+    private static int THUMB_WIDTH = 408;
+    private static int THUMB_HEIGHT = 240;
 
     public LocationMessageItemProvider() {
         mConfig.showReadState = true;
         mConfig.showContentBubble = false;
+        Context context = IMCenter.getInstance().getContext();
+        if (context != null) {
+            Resources resources = context.getResources();
+            try {
+                THUMB_WIDTH = resources.getInteger(resources.getIdentifier("rc_location_thumb_width", "integer", context.getPackageName()));
+                THUMB_HEIGHT = resources.getInteger(resources.getIdentifier("rc_location_thumb_height", "integer", context.getPackageName()));
+            } catch (Resources.NotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+
     }
 
 
@@ -51,11 +68,15 @@ public class LocationMessageItemProvider extends BaseMessageItemProvider<Locatio
         final Uri uri = locationMessage.getImgUri();
         RLog.d(TAG, "uri = " + uri);
         ImageView img = holder.getView(R.id.rc_img);
+        ViewGroup.LayoutParams params = img.getLayoutParams();
+        params.height = RongUtils.dip2px(THUMB_HEIGHT / 2);
+        params.width = RongUtils.dip2px(THUMB_WIDTH / 2);
+        img.setLayoutParams(params);
         if (uri == null || !("file").equals(uri.getScheme())) {
             img.setImageResource(R.drawable.rc_ic_location_item_default);
         } else {
             int px = dip2pix(IMCenter.getInstance().getContext(), 8);
-            RoundedCornersTransform roundedTransform = null;
+            RoundedCornersTransform roundedTransform;
             if (uiMessage.getMessage().getMessageDirection().equals(Message.MessageDirection.SEND)) {
                 roundedTransform = new RoundedCornersTransform(px, 0, px, px);
             } else {
@@ -70,12 +91,10 @@ public class LocationMessageItemProvider extends BaseMessageItemProvider<Locatio
         }
         TextView address = holder.getView(R.id.rc_location_content);
         address.setText(locationMessage.getPoi());
-        RCMessageFrameLayout layout = holder.getView(R.id.rc_location);
-//        if (uiMessage.getMessage().getMessageDirection().equals(Message.MessageDirection.SEND)) {
-//            layout.setBackgroundResource(R.drawable.rc_ic_bubble_right);
-//        } else {
-//            layout.setBackgroundResource(R.drawable.rc_ic_bubble_left);
-//        }
+        FrameLayout.LayoutParams param = new FrameLayout.LayoutParams(address.getLayoutParams().width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        param.gravity = Gravity.BOTTOM | Gravity.RIGHT;
+        param.width = RongUtils.dip2px(THUMB_WIDTH / 2);
+        address.setLayoutParams(param);
     }
 
     @Override

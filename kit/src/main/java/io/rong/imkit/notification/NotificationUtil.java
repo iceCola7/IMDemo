@@ -59,8 +59,8 @@ public class NotificationUtil {
                 if (channel == null) {
                     channel = getDefaultChannel(context);
                 }
-                if (RongConfigCenter.notificationConfig().getListener() != null) {
-                    channel = RongConfigCenter.notificationConfig().getListener().onRegisterChannel(getDefaultChannel(context));
+                if (RongConfigCenter.notificationConfig().getInterceptor() != null) {
+                    channel = RongConfigCenter.notificationConfig().getInterceptor().onRegisterChannel(getDefaultChannel(context));
                 }
                 nm.createNotificationChannel(channel);
             }

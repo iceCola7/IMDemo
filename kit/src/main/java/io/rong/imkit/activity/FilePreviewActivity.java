@@ -2,6 +2,7 @@ package io.rong.imkit.activity;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -116,11 +119,14 @@ public class FilePreviewActivity extends RongBaseActivity implements View.OnClic
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.rc_ac_file_download);
+        initStatusBar(R.color.app_color_white);
         initView();
         initData();
         initListener();
         getFileMessageStatus();
     }
+
+
 
     private void initListener() {
         IMCenter.getInstance().addMessageEventListener(mEventListener);

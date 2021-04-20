@@ -1,11 +1,14 @@
 package io.rong.imkit.activity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.ViewFlipper;
 
@@ -15,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import io.rong.imkit.R;
 import io.rong.imkit.utils.PermissionCheckUtil;
+import io.rong.imkit.utils.StatusBarUtil;
 import io.rong.imkit.utils.language.RongConfigurationManager;
 import io.rong.imkit.widget.TitleBar;
 
@@ -61,5 +65,8 @@ public class RongBaseActivity extends AppCompatActivity {
         }
     }
 
-
+    public void initStatusBar(int colorResId) {
+        StatusBarUtil.setRootViewFitsSystemWindows(this, true);
+        StatusBarUtil.setStatusBarColor(this, colorResId == 0 ? getResources().getColor(R.color.rc_background_main_color) : getResources().getColor(colorResId)); //Color.parseColor("#F5F6F9")
+    }
 }

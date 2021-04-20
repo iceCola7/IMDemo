@@ -177,6 +177,7 @@ public class ReferenceMessageItemProvider extends BaseMessageItemProvider<Refere
 
     private void setTextContent(final TextView textView, final UiMessage data, String content, boolean isSendContent) {
         textView.setTag(data.getMessageId());
+        content = StringUtils.getStringNoBlank(content);
         if (isSendContent) {
             if (data.getContentSpannable() == null) {
                 SpannableStringBuilder spannable = TextViewUtils.getSpannable(content, new TextViewUtils.RegularCallBack() {
@@ -206,7 +207,7 @@ public class ReferenceMessageItemProvider extends BaseMessageItemProvider<Refere
                             textView.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    textView.setText(StringUtils.getStringNoBlank(data.getReferenceContentSpannable().toString()));
+                                    textView.setText(data.getReferenceContentSpannable());
                                 }
                             });
                         }
@@ -214,7 +215,7 @@ public class ReferenceMessageItemProvider extends BaseMessageItemProvider<Refere
                 });
                 data.setReferenceContentSpannable(spannable);
             }
-            textView.setText(StringUtils.getStringNoBlank(data.getReferenceContentSpannable().toString()));
+            textView.setText(data.getReferenceContentSpannable());
         }
     }
 

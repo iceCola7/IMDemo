@@ -66,7 +66,6 @@ public class RongMentionManager implements IExtensionEventWatcher {
         mentionInstance.inputEditText = editText;
         mentionInstance.mentionBlocks = new ArrayList<>();
         stack.add(mentionInstance);
-        RongExtensionManager.getInstance().addExtensionEventWatcher(this);
     }
 
     public void destroyInstance(Conversation.ConversationType conversationType, String targetId) {

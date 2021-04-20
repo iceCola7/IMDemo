@@ -19,6 +19,7 @@ allprojects {
         google()
         jcenter()
         maven {url  "https://dl.bintray.com/rongcloud/maven"}
+        maven {url  "http://maven.rongcloud.cn/repository/maven-releases/"}
     }
 }
 

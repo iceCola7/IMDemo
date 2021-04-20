@@ -7,11 +7,13 @@ import android.text.TextUtils;
 import android.widget.EditText;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.rong.common.RLog;
 import io.rong.imkit.IMCenter;
@@ -55,6 +57,9 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
     private WeakReference<Fragment> mFragment;
     private UiMessage mUiMessage;
     private Stack<ReferenceInstance> stack = new Stack<>();
+    private WeakReference<RongExtensionViewModel> messageViewModel;
+    private List<ReferenceStatusListener> mReferenceStatusListenerList = new CopyOnWriteArrayList<>();
+
     private MessageItemLongClickAction mClickActionReference = new MessageItemLongClickAction.Builder()
             .titleResId(R.string.rc_dialog_item_message_reference)
             .actionListener(new MessageItemLongClickAction.MessageItemLongClickListener() {
@@ -121,6 +126,13 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
         return SingletonHolder.instance;
     }
 
+    public void setReferenceStatusListener(ReferenceStatusListener listener) {
+        mReferenceStatusListenerList.add(listener);
+    }
+
+    public void removeReferenceStatusListener(ReferenceStatusListener listener) {
+        mReferenceStatusListenerList.remove(listener);
+    }
 
     @Override
     public void onInit(Context context, String appKey) {
@@ -138,6 +150,15 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
         if (!RongConfigCenter.featureConfig().isReferenceEnable()) {
             return;
         }
+        messageViewModel = new WeakReference<>(new ViewModelProvider(fragment).get(RongExtensionViewModel.class));
+        messageViewModel.get().getInputModeLiveData().observe(fragment, new Observer<InputMode>() {
+            @Override
+            public void onChanged(InputMode inputMode) {
+                if (inputMode.equals(InputMode.VoiceInput)) {
+                    hideReferenceView();
+                }
+            }
+        });
 
         MessageItemLongClickActionManager.getInstance().addMessageItemLongClickAction(mClickActionReference);
 
@@ -218,8 +239,10 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
                         .setCancelable(false)
                         .show();
                 hideReferenceView();
-                RongExtensionViewModel messageViewModel = new ViewModelProvider(fragment).get(RongExtensionViewModel.class);
-                messageViewModel.collapseExtensionBoard();
+                RongExtensionViewModel viewModel = messageViewModel.get();
+                if (viewModel != null) {
+                    viewModel.collapseExtensionBoard();
+                }
             }
             return false;
         }
@@ -286,6 +309,7 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
             MessageItemLongClickActionManager.getInstance().removeMessageItemLongClickAction(mClickActionReference);
             IMCenter.getInstance().removeOnRecallMessageListener(mRecallMessageListener);
             IMCenter.getInstance().removeMessageEventListener(mMessageEventListener);
+            RongExtensionManager.getInstance().removeExtensionEventWatcher(this);
         }
     }
 
@@ -294,6 +318,9 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
         RongExtension rongExtension = mRongExtension.get();
         if (rongExtension != null) {
             rongExtension.setAttachedInfo(null);
+        }
+        for (ReferenceStatusListener listener : mReferenceStatusListenerList) {
+            listener.onHide();
         }
         mUiMessage = null;
     }
@@ -305,5 +332,12 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
 
     public UiMessage getUiMessage() {
         return mUiMessage;
+    }
+
+    public interface ReferenceStatusListener {
+        /**
+         * 引用消息栏隐藏时回调
+         */
+        void onHide();
     }
 }
