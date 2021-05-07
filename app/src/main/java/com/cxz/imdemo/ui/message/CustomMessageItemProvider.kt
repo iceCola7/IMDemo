@@ -16,7 +16,7 @@ import io.rong.imlib.model.MessageContent
  * @date 2021/4/19
  * @desc
  */
-class CustomMessageProvider : BaseMessageItemProvider<CustomMessageContent>() {
+class CustomMessageItemProvider : BaseMessageItemProvider<CustomMessageContent>() {
 
     init {
         // 修改模板属性

@@ -6,7 +6,7 @@ import com.cxz.imdemo.ui.conversation.ConversationActivity
 import com.cxz.imdemo.ui.conversationlist.ConversationListActivity
 import com.cxz.imdemo.ui.message.CustomConversationProvider
 import com.cxz.imdemo.ui.message.CustomMessageContent
-import com.cxz.imdemo.ui.message.CustomMessageProvider
+import com.cxz.imdemo.ui.message.CustomMessageItemProvider
 import com.cxz.imdemo.ui.plugin.MyExtensionConfig
 import io.rong.imkit.RongIM
 import io.rong.imkit.config.ConversationClickListener
@@ -62,7 +62,7 @@ class RYManager {
         val messageContentList = mutableListOf<Class<out MessageContent>>()
         messageContentList.add(CustomMessageContent::class.java)
         RongIMClient.registerMessageType(messageContentList)
-        RongConfigCenter.conversationConfig().addMessageProvider(CustomMessageProvider())
+        RongConfigCenter.conversationConfig().addMessageProvider(CustomMessageItemProvider())
 
         // 注册自定义的输入区配置
         RongExtensionManager.getInstance().extensionConfig = MyExtensionConfig()
