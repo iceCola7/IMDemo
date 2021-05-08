@@ -4,8 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.provider.MediaStore
 import android.text.TextUtils
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -21,6 +23,10 @@ import io.rong.imkit.manager.SendMediaManager
 import io.rong.imkit.picture.PictureSelector
 import io.rong.imkit.picture.config.PictureConfig
 import io.rong.imkit.picture.config.PictureMimeType
+import io.rong.imkit.picture.config.PictureSelectionConfig
+import io.rong.imkit.picture.tools.MediaUtils
+import io.rong.imkit.picture.tools.PictureFileUtils
+import io.rong.imkit.picture.tools.SdkVersionUtils
 import io.rong.imkit.utils.PermissionCheckUtil
 import io.rong.imlib.RongIMClient
 import io.rong.imlib.model.Conversation
@@ -35,6 +41,12 @@ class MyShotPlugin : IPluginModule, IPluginRequestPermissionResultCallback {
     var conversationType: Conversation.ConversationType? = null
     var targetId: String? = null
     private var mRequestCode = -1
+
+    companion object {
+        var imageUri: Uri? = null
+        var cameraPath = ""
+        var config = PictureSelectionConfig.getInstance()
+    }
 
     override fun obtainDrawable(context: Context): Drawable? {
         return ContextCompat.getDrawable(context, R.mipmap.icon_shot_plugin)
@@ -109,9 +121,28 @@ class MyShotPlugin : IPluginModule, IPluginRequestPermissionResultCallback {
     }
 
     private fun openCamera(currentFragment: Fragment) {
-        PictureSelector.create(currentFragment)
-            .openCamera(PictureMimeType.ofImage())
-            .loadImageEngine(RongConfigCenter.featureConfig().kitImageEngine)
-            .forResult(PictureConfig.REQUEST_CAMERA)
+//        PictureSelector.create(currentFragment)
+//            .openCamera(PictureMimeType.ofImage())
+//            .loadImageEngine(RongConfigCenter.featureConfig().kitImageEngine)
+//            .forResult(PictureConfig.REQUEST_CAMERA)
+        currentFragment?.apply {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            if (context?.packageManager?.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) == true) {
+                if (SdkVersionUtils.checkedAndroid_Q()) {
+                    imageUri = MediaUtils.createImageUri(context?.applicationContext)
+                    cameraPath = imageUri.toString()
+                } else {
+                    val chooseMode = PictureConfig.TYPE_ALL
+                    val cameraFile = PictureFileUtils.createCameraFile(
+                        context?.applicationContext,
+                        chooseMode, config.cameraFileName, config.suffixType
+                    )
+                    cameraPath = cameraFile.absolutePath
+                    imageUri = PictureFileUtils.parUri(context, cameraFile)
+                }
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+                startActivityForResult(cameraIntent, PictureConfig.REQUEST_CAMERA)
+            }
+        }
     }
 }
