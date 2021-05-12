@@ -2,7 +2,6 @@ package com.cxz.imdemo
 
 import android.app.Application
 import com.cxz.imdemo.manager.RYManager
-import io.rong.imkit.RongIM
 
 /**
  * @author chenxz
@@ -13,12 +12,15 @@ class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // 初始化融云
         initRY()
     }
 
+    /**
+     * 初始化融云
+     */
     private fun initRY() {
-        val appKey = "3argexb63f7he"
-        RongIM.init(this, appKey, true)
-        RYManager.instance.init()
+        RYManager.instance.init(this)
     }
 }
