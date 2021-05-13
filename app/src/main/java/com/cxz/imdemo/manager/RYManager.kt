@@ -2,6 +2,7 @@ package com.cxz.imdemo.manager
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.view.View
 import android.widget.EditText
 import androidx.lifecycle.MutableLiveData
@@ -22,14 +23,12 @@ import io.rong.imkit.conversationlist.provider.PrivateConversationProvider
 import io.rong.imkit.feature.mention.IExtensionEventWatcher
 import io.rong.imkit.userinfo.RongUserInfoManager
 import io.rong.imkit.userinfo.UserDataProvider
+import io.rong.imkit.userinfo.model.GroupUserInfo
 import io.rong.imkit.utils.RouteUtils
 import io.rong.imlib.IRongCoreEnum
 import io.rong.imlib.RongIMClient
 import io.rong.imlib.chatroom.base.RongChatRoomClient
-import io.rong.imlib.model.Conversation
-import io.rong.imlib.model.Message
-import io.rong.imlib.model.MessageContent
-import io.rong.imlib.model.UserInfo
+import io.rong.imlib.model.*
 import io.rong.push.PushEventListener
 import io.rong.push.PushType
 import io.rong.push.RongPushClient
@@ -435,6 +434,52 @@ class RYManager private constructor() {
     }
 
     /**
+     * 更新 IMKit 显示的用户信息
+     * @param userId String
+     * @param userName String
+     * @param portraitUri String
+     */
+    private fun updateUserInfoCache(userId: String, userName: String, portraitUri: Uri) {
+        val oldUserInfo = RongUserInfoManager.getInstance().getUserInfo(userId)
+        if (oldUserInfo == null ||
+            (oldUserInfo.name != userName || oldUserInfo.portraitUri == null || oldUserInfo.portraitUri != portraitUri)
+        ) {
+            val userInfo = UserInfo(userId, userName, portraitUri)
+            RongUserInfoManager.getInstance().refreshUserInfoCache(userInfo)
+        }
+    }
+
+    /**
+     * 更新 IMKit 显示用群组信息
+     * @param groupId String
+     * @param groupName String
+     * @param portraitUri Uri
+     */
+    private fun updateGroupInfoCache(groupId: String, groupName: String, portraitUri: Uri) {
+        val oldGroupInfo = RongUserInfoManager.getInstance().getGroupInfo(groupId)
+        if (oldGroupInfo == null ||
+            (oldGroupInfo.name != groupName || oldGroupInfo.portraitUri == null || oldGroupInfo.portraitUri != portraitUri)
+        ) {
+            val groupInfo = Group(groupId, groupName, portraitUri)
+            RongUserInfoManager.getInstance().refreshGroupInfoCache(groupInfo)
+        }
+    }
+
+    /**
+     * 更新 IMKit 显示用群组成员信息
+     * @param groupId String
+     * @param userId String
+     * @param nickName String
+     */
+    fun updateGroupMemberInfoCache(groupId: String, userId: String, nickName: String) {
+        val oldGroupUserInfo = RongUserInfoManager.getInstance().getGroupUserInfo(groupId, userId)
+        if (oldGroupUserInfo == null || oldGroupUserInfo.nickname != nickName) {
+            val groupMemberInfo = GroupUserInfo(groupId, userId, nickName)
+            RongUserInfoManager.getInstance().refreshGroupUserInfoCache(groupMemberInfo)
+        }
+    }
+
+    /**
      * 初始化自定义消息和消息模版
      */
     private fun initMessageAndTemplate() {
@@ -542,12 +587,13 @@ class RYManager private constructor() {
     /**
      * 连接 IM 服务
      * @param token String
-     * @param timeOut Int 自动重连超时时间
+     * @param timeOut Int 自动重连超时时间 单位秒
      * @param success Function1<String, Unit>?
      * @param errorCallback Function0<Unit>?
      */
     private fun connectIM(
-        token: String, timeOut: Int,
+        token: String,
+        timeOut: Int,
         success: ((String) -> Unit)? = null,
         errorCallback: (() -> Unit)? = null
     ) {
