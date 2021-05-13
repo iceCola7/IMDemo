@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.plugin
+package com.cxz.imdemo.ui.im.plugin
 
 import android.Manifest
 import android.app.Activity
@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.cxz.imdemo.R
 import io.rong.imkit.IMCenter
-import io.rong.imkit.config.RongConfigCenter
 import io.rong.imkit.conversation.extension.RongExtension
 import io.rong.imkit.conversation.extension.component.plugin.IPluginModule
 import io.rong.imkit.conversation.extension.component.plugin.IPluginRequestPermissionResultCallback
@@ -22,7 +21,6 @@ import io.rong.imkit.manager.SendImageManager
 import io.rong.imkit.manager.SendMediaManager
 import io.rong.imkit.picture.PictureSelector
 import io.rong.imkit.picture.config.PictureConfig
-import io.rong.imkit.picture.config.PictureMimeType
 import io.rong.imkit.picture.config.PictureSelectionConfig
 import io.rong.imkit.picture.tools.MediaUtils
 import io.rong.imkit.picture.tools.PictureFileUtils

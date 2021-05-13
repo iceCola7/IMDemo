@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.plugin
+package com.cxz.imdemo.ui.im.plugin
 
 import io.rong.imkit.conversation.extension.DefaultExtensionConfig
 import io.rong.imkit.conversation.extension.component.plugin.FilePlugin
@@ -11,9 +11,8 @@ import io.rong.imlib.model.Conversation
 /**
  * @author chenxz
  * @date 2021/4/19
- * @desc
+ * @desc 自定义的输入区配置
  */
-
 class MyExtensionConfig : DefaultExtensionConfig() {
 
     override fun getPluginModules(

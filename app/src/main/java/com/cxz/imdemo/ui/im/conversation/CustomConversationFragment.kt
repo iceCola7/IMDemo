@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.conversation
+package com.cxz.imdemo.ui.im.conversation
 
 import android.os.Bundle
 import android.view.View

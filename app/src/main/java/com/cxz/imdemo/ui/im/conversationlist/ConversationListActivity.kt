@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.conversationlist
+package com.cxz.imdemo.ui.im.conversationlist
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity

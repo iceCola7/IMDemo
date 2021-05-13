@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.message
+package com.cxz.imdemo.ui.im.message
 
 import android.view.ViewGroup
 import io.rong.imkit.conversationlist.model.BaseUiConversation

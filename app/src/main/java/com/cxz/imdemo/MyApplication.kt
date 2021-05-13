@@ -1,7 +1,7 @@
 package com.cxz.imdemo
 
 import android.app.Application
-import com.cxz.imdemo.manager.RYManager
+import com.cxz.imdemo.manager.IMManager
 
 /**
  * @author chenxz
@@ -21,6 +21,6 @@ class MyApplication : Application() {
      * 初始化融云
      */
     private fun initRY() {
-        RYManager.instance.init(this)
+        IMManager.instance.init(this)
     }
 }

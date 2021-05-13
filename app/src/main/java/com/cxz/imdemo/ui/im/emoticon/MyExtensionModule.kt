@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.emoticon
+package com.cxz.imdemo.ui.im.emoticon
 
 import android.content.Context
 import androidx.fragment.app.Fragment

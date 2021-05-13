@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.plugin
+package com.cxz.imdemo.ui.im.plugin
 
 import android.content.Context
 import android.graphics.drawable.Drawable

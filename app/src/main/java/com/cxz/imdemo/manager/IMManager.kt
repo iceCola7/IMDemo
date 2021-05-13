@@ -6,12 +6,12 @@ import android.net.Uri
 import android.view.View
 import android.widget.EditText
 import androidx.lifecycle.MutableLiveData
-import com.cxz.imdemo.ui.conversation.ConversationActivity
-import com.cxz.imdemo.ui.conversationlist.ConversationListActivity
-import com.cxz.imdemo.ui.message.CustomConversationProvider
-import com.cxz.imdemo.ui.message.CustomMessageContent
-import com.cxz.imdemo.ui.message.CustomMessageItemProvider
-import com.cxz.imdemo.ui.plugin.MyExtensionConfig
+import com.cxz.imdemo.ui.im.conversation.ConversationActivity
+import com.cxz.imdemo.ui.im.conversationlist.ConversationListActivity
+import com.cxz.imdemo.ui.im.message.CustomConversationProvider
+import com.cxz.imdemo.ui.im.message.CustomMessageContent
+import com.cxz.imdemo.ui.im.message.CustomMessageItemProvider
+import com.cxz.imdemo.ui.im.plugin.MyExtensionConfig
 import io.rong.imkit.IMCenter
 import io.rong.imkit.config.ConversationClickListener
 import io.rong.imkit.config.ConversationListBehaviorListener
@@ -38,17 +38,17 @@ import io.rong.push.pushconfig.PushConfig
 /**
  * @author chenxz
  * @date 2021/4/9
- * @desc
+ * @desc IM 管理类
  */
-class RYManager private constructor() {
+class IMManager private constructor() {
 
     private lateinit var context: Context
 
     private val appKey = "3argexb63f7he"
 
     companion object {
-        val instance: RYManager by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
-            return@lazy RYManager()
+        val instance: IMManager by lazy(mode = LazyThreadSafetyMode.SYNCHRONIZED) {
+            return@lazy IMManager()
         }
     }
 

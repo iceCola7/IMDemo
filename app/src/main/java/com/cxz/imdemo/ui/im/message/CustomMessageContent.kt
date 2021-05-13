@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.message
+package com.cxz.imdemo.ui.im.message
 
 import android.os.Parcel
 import android.os.Parcelable

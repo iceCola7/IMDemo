@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.subconversation
+package com.cxz.imdemo.ui.im.subconversation
 
 import io.rong.imkit.subconversationlist.SubConversationListFragment
 

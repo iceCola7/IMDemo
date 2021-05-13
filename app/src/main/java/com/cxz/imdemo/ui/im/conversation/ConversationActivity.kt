@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.conversation
+package com.cxz.imdemo.ui.im.conversation
 
 import android.app.Activity
 import android.content.Intent
@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.text.TextUtils
 import androidx.appcompat.app.AppCompatActivity
 import com.cxz.imdemo.R
-import com.cxz.imdemo.ui.plugin.MyShotPlugin
+import com.cxz.imdemo.ui.im.plugin.MyShotPlugin
 import io.rong.imkit.IMCenter
 import io.rong.imkit.manager.SendImageManager
 import io.rong.imkit.manager.SendMediaManager

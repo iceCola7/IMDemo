@@ -1,4 +1,4 @@
-package com.cxz.imdemo.ui.message
+package com.cxz.imdemo.ui.im.message
 
 import android.content.Context
 import android.text.Spannable
@@ -14,7 +14,7 @@ import io.rong.imlib.model.MessageContent
 /**
  * @author chenxz
  * @date 2021/4/19
- * @desc
+ * @desc 自定义消息布局
  */
 class CustomMessageItemProvider : BaseMessageItemProvider<CustomMessageContent>() {
 
