@@ -11,6 +11,7 @@ import com.cxz.imdemo.ui.im.conversationlist.ConversationListActivity
 import com.cxz.imdemo.ui.im.message.CustomConversationProvider
 import com.cxz.imdemo.ui.im.message.CustomMessageContent
 import com.cxz.imdemo.ui.im.message.CustomMessageItemProvider
+import com.cxz.imdemo.ui.im.message.CustomPrivateConversationProvider
 import com.cxz.imdemo.ui.im.plugin.MyExtensionConfig
 import io.rong.imkit.IMCenter
 import io.rong.imkit.config.ConversationClickListener
@@ -486,6 +487,7 @@ class IMManager private constructor() {
         // 注册自定义会话模板
         RongConfigCenter.conversationListConfig().providerManager.apply {
             replaceProvider(PrivateConversationProvider::class.java, CustomConversationProvider())
+            replaceProvider(PrivateConversationProvider::class.java, CustomPrivateConversationProvider())
         }
         // 注册自定义消息
         val messageContentList = mutableListOf<Class<out MessageContent>>()
