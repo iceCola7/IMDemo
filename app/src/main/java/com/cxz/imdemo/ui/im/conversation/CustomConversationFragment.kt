@@ -1,6 +1,8 @@
 package com.cxz.imdemo.ui.im.conversation
 
+import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -25,7 +27,7 @@ class CustomConversationFragment : ConversationFragment() {
     private var mTextBanTip: TextView? = null
 
     override fun onResolveAdapter(): MessageListAdapter {
-        return super.onResolveAdapter()
+        return CustomMessageListAdapter(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -79,4 +81,63 @@ class CustomConversationFragment : ConversationFragment() {
             }
         }, 0)
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    fun handleAttentionStatus(attentionType: Int) {
+        mView?.postDelayed({
+            mRongExtensionViewModel.collapseExtensionBoard()
+            if (attentionType != 3) {
+                mVoiceToggleBtn?.setOnTouchListener { v, event ->
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        return@setOnTouchListener true
+                    }
+                    return@setOnTouchListener false
+                }
+                mAddBtn?.setOnTouchListener { v, event ->
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        return@setOnTouchListener true
+                    }
+                    return@setOnTouchListener false
+                }
+                mVoiceToggleBtn?.setImageResource(R.mipmap.im_icon_voice_toggle_grey)
+                mAddBtn?.setImageResource(R.mipmap.im_icon_plugin_toggle_grey)
+            } else {
+                mVoiceToggleBtn?.setOnTouchListener { v, event ->
+                    return@setOnTouchListener false
+                }
+                mAddBtn?.setOnTouchListener { v, event ->
+                    return@setOnTouchListener false
+                }
+            }
+        }, 0)
+    }
+
+    /**
+     * 处理底部控件的可用状态
+     * @param isEnable Boolean 是否可用
+     */
+    fun handleEnableStatus(isEnable: Boolean) {
+        mView?.postDelayed({
+            mRongExtensionViewModel.collapseExtensionBoard()
+            if (isEnable) {
+                mVoiceToggleBtn?.isEnabled = true
+                mEmojiToggleBtn?.isEnabled = true
+                mAddBtn?.isEnabled = true
+                mEditText?.isEnabled = true
+                mVoiceToggleBtn?.setImageResource(R.mipmap.im_icon_voice_toggle)
+                mEmojiToggleBtn?.setImageResource(R.mipmap.im_icon_emotion_toggle)
+                mAddBtn?.setImageResource(R.mipmap.im_icon_plugin_toggle)
+            } else {
+                mVoiceToggleBtn?.isEnabled = false
+                //mEmojiToggleBtn?.isEnabled = false
+                mAddBtn?.isEnabled = false
+                //mEditText?.isEnabled = false
+
+                mVoiceToggleBtn?.setImageResource(R.mipmap.im_icon_voice_toggle_grey)
+                //mEmojiToggleBtn?.setImageResource(R.mipmap.im_icon_emotion_toggle_grey)
+                mAddBtn?.setImageResource(R.mipmap.im_icon_plugin_toggle_grey)
+            }
+        }, 0)
+    }
+
 }
