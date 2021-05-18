@@ -6,6 +6,7 @@ import android.net.Uri
 import android.view.View
 import android.widget.EditText
 import androidx.lifecycle.MutableLiveData
+import com.cxz.imdemo.ui.im.config.MyKitImageEngine
 import com.cxz.imdemo.ui.im.conversation.ConversationActivity
 import com.cxz.imdemo.ui.im.conversationlist.ConversationListActivity
 import com.cxz.imdemo.ui.im.message.CustomConversationProvider
@@ -200,6 +201,9 @@ class IMManager private constructor() {
             Conversation.ConversationType.ENCRYPTED
         )
         RongConfigCenter.featureConfig().enableReadReceipt(*types)
+
+        // 配置自定义加载图片
+        RongConfigCenter.featureConfig().kitImageEngine = MyKitImageEngine()
 
         // 配置会话列表界面相关内容
         initConversationList()
