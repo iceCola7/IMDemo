@@ -60,6 +60,7 @@ import io.rong.imkit.manager.hqvoicemessage.HQVoiceMsgDownloadManager;
 import io.rong.imkit.model.State;
 import io.rong.imkit.model.UiMessage;
 import io.rong.imkit.notification.RongNotificationManager;
+import io.rong.imkit.picture.tools.ToastUtils;
 import io.rong.imkit.utils.ExecutorHelper;
 import io.rong.imkit.utils.PermissionCheckUtil;
 import io.rong.imkit.utils.RouteUtils;
@@ -622,6 +623,9 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                     uiMessage.setProgress(event.getProgress());
                     break;
                 case SendMediaEvent.ERROR:
+                    if (event.getCode() != null && event.getCode().code == RongIMClient.ErrorCode.RC_MEDIA_EXCEPTION.code) {
+                        ToastUtils.s(getApplication(), getApplication().getString(R.string.rc_media_upload_error));
+                    }
                     sentTime = msg.getSentTime() - RongIMClient.getInstance().getDeltaTime();
                     msg.setSentTime(sentTime);//更新成服务器时间
                     uiMessage.setState(State.ERROR);
@@ -784,6 +788,9 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         if (event.getTargetId().equals(mCurTargetId) && event.getConversationType().equals(mCurConversationType)) {
             mUiMessages.clear();
             mUiMessageLiveData.setValue(mUiMessages);
+            mNewUnReadMentionMessages.clear();
+            processNewMentionMessageUnread(true);
+            hideHistoryBar();
         }
     }
 
@@ -1278,7 +1285,7 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
         boolean needRefresh = false;
 
         int size = mNewUnReadMentionMessages.size();
-        for (int i = size - 1 ; i >= 0; i--) {
+        for (int i = size - 1; i >= 0; i--) {
             if (mNewUnReadMentionMessages.get(i).getMessageId() == message.getMessageId()) {
                 mNewUnReadMentionMessages.remove(mNewUnReadMentionMessages.get(i));
                 needRefresh = true;
@@ -1312,6 +1319,9 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
                 mRemoteMessageLoadFinish = false;
                 mState = IMessageState.normalState;
                 mUiMessageLiveData.setValue(mUiMessages);
+                mNewUnReadMentionMessages.clear();
+                processNewMentionMessageUnread(true);
+                hideHistoryBar();
             }
         }
     };
@@ -1503,7 +1513,7 @@ public class MessageViewModel extends AndroidViewModel implements MessageEventLi
             long topTime = firstMessage.getSentTime();
             long bottomTime = lastMessage.getSentTime();
             int size = mNewUnReadMentionMessages.size();
-            for (int i = size - 1 ; i >= 0; i--) {
+            for (int i = size - 1; i >= 0; i--) {
                 if (mNewUnReadMentionMessages.get(i).getSentTime() >= topTime && mNewUnReadMentionMessages.get(i).getSentTime() <= bottomTime) {
                     mNewUnReadMentionMessages.remove(mNewUnReadMentionMessages.get(i));
                 }

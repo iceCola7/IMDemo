@@ -65,6 +65,9 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
             .actionListener(new MessageItemLongClickAction.MessageItemLongClickListener() {
                 @Override
                 public boolean onMessageItemLongClick(Context context, UiMessage uiMessage) {
+                    if (mRongExtension == null) {
+                        return false;
+                    }
                     RongExtension rongExtension = mRongExtension.get();
                     Fragment fragment = mFragment.get();
                     if (rongExtension == null || fragment == null) {
@@ -95,6 +98,9 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
                 @Override
                 public boolean filter(UiMessage uiMessage) {
                     //过滤失败消息
+                    if (mRongExtension == null) {
+                        return false;
+                    }
                     RongExtension rongExtension = mRongExtension.get();
                     if (rongExtension == null) {
                         return false;
@@ -315,7 +321,12 @@ public class ReferenceManager implements IExtensionModule, IExtensionEventWatche
 
     private void hideReferenceView() {
         mReferenceMessage = null;
-        RongExtension rongExtension = mRongExtension.get();
+        RongExtension rongExtension = null;
+
+        if (mRongExtension != null) {
+            rongExtension = mRongExtension.get();
+        }
+
         if (rongExtension != null) {
             rongExtension.setAttachedInfo(null);
         }
